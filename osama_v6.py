@@ -1,3 +1,6 @@
+from flask import Flask
+import threading
+import os
 import telebot
 import requests
 import time
@@ -108,3 +111,20 @@ def invalid_input(message):
 
 print("🤖 Osama JSON Bot v6.0 is running...")
 bot.polling()
+# --- DUMMY WEB SERVER (Render ke liye) ---
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is running successfully!"
+
+def run_web():
+    # Render humein PORT environment variable deta hai
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+# Web server ko background thread mein chalayein
+if __name__ == "__main__":
+    threading.Thread(target=run_web).start()
+    print("🤖 Osama Bot is running...")
+    bot.polling(none_stop=True)
