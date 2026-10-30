@@ -8,8 +8,11 @@ import json
 from telebot import types
 
 # --- CONFIGURATION ---
-BOT_TOKEN = '9090123558:AAEE7JhFuxYPpUkQfLpcoc6EAAqeypMKn50'  # Yahan apna Bot Token dalein
-YOUR_CHAT_ID = '8439527054' # Yahan apni Chat ID dalein (Numbers mein)
+# Token aur ID ab Render ke Environment Variables se aayenge, code mein nahi
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
+YOUR_CHAT_ID = os.environ.get('CHAT_ID')
+
+bot = telebot.TeleBot(BOT_TOKEN)
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
@@ -109,8 +112,6 @@ def handle_scan(message):
 def invalid_input(message):
     bot.reply_to(message, "❌ <b>ERROR:</b> Invalid format. Please send a 10-digit mobile number.", parse_mode='HTML')
 
-print("🤖 Osama JSON Bot v6.0 is running...")
-bot.polling()
 # --- DUMMY WEB SERVER (Render ke liye) ---
 app = Flask(__name__)
 
