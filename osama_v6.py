@@ -7,20 +7,17 @@ import time
 import json
 from telebot import types
 
-# --- CONFIGURATION ---
-# Token aur ID ab Render ke Environment Variables se aayenge, code mein nahi
+# --- CONFIGURATION (Render Environment Variables) ---
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 YOUR_CHAT_ID = os.environ.get('CHAT_ID')
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
-bot = telebot.TeleBot(BOT_TOKEN)
-
 # API NODES
 APIS = [
-    {"name": "1.7B_ROWS_DB", "url": "https://tfqdeadlo-1-78bapi.hf.space/search?mobile={}"},
-    {"name": "851M_ROWS_DB", "url": "https://tfqdeadlo-850crfastsearch.hf.space/search/{}"},
-    {"name": "1.4B_ROWS_DB", "url": "https://tfqdeadlo-inddataapi.hf.space/search?mobile={}"}
+    "https://tfqdeadlo-1-78bapi.hf.space/search?mobile={}",
+    "https://tfqdeadlo-850crfastsearch.hf.space/search/{}",
+    "https://tfqdeadlo-inddataapi.hf.space/search?mobile={}"
 ]
 
 # --- MENU (CONTACT DEVELOPER BUTTON) ---
@@ -31,18 +28,13 @@ def get_menu():
     markup.add(btn_dev)
     return markup
 
-# --- START COMMAND ---
+# --- START COMMAND (Simple & Clean) ---
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     text = (
-        "🟢 <b>OSAMA OSINT CORE v6.0</b>\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "> System Status: <code>ONLINE</code>\n"
-        "> Access Level:  <code>ROOT</code>\n"
-        "> Encryption:   <code>AES-256</code>\n"
-        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "Send any 10-digit mobile number to fetch the <b>Raw JSON Dump</b> from the 3 linked databases.\n\n"
-        "<i>⚠️ All queries are logged. Use strictly for educational purposes.</i>"
+        "🟢 <b>OSAMA OSINT ENGINE</b>\n\n"
+        "Send me any 10-digit mobile number, and I will provide you with all the details related to it.\n\n"
+        "⚠️ <i>All queries are logged. Use strictly for educational purposes.</i>"
     )
     bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=get_menu())
 
@@ -50,57 +42,85 @@ def send_welcome(message):
 @bot.message_handler(func=lambda message: message.text.isdigit() and len(message.text) == 10)
 def handle_scan(message):
     mobile = message.text
-    msg = bot.send_message(message.chat.id, f"⚡ <b>TARGET:</b> <code>{mobile}</code>\n\n<code>[■□□□□□□□□□] INITIALIZING...</code>", parse_mode='HTML')
+    msg = bot.send_message(message.chat.id, f"⚡ <b>Searching Database for:</b> <code>{mobile}</code>\n\n<code>[■□□□□□□□□□] INITIALIZING...</code>", parse_mode='HTML')
     
-    # Premium Loading Sequence
+    # Premium Loading Animation
     stages = [
-        "> [■■■□□□□□□□] ROUTING VIA TOR...",
-        "> [■■■■■□□□□□] BYPASSING FIREWALLS...",
-        "> [■■■■■■■■□□] QUERYING 3 NODES...",
-        "> [■■■■■■■■■■] EXTRACTING RAW DATA..."
+        "> [■■■□□□□□□□] BYPASSING FIREWALLS...",
+        "> [■■■■■□□□□□] QUERYING 3 NODES...",
+        "> [■■■■■■■■□□] EXTRACTING RECORDS...",
+        "> [■■■■■■■■■■] FORMATTING DATA..."
     ]
     
     for stage in stages:
-        time.sleep(0.8)
-        bot.edit_message_text(f"⚡ <b>TARGET:</b> <code>{mobile}</code>\n\n<code>{stage}</code>", message.chat.id, msg.message_id, parse_mode='HTML')
+        time.sleep(0.6)
+        bot.edit_message_text(f"⚡ <b>Searching Database for:</b> <code>{mobile}</code>\n\n<code>{stage}</code>", message.chat.id, msg.message_id, parse_mode='HTML')
         
-    # Fetching Data
-    found_any = False
-    final_text = f"🟢 <b>DATA ACQUIRED:</b> <code>{mobile}</code>\n"
-    final_text += "<i>Raw server responses below:</i>\n\n"
+    record = None
     
-    for api in APIS:
+    # Try all APIs until we find a record
+    for url in APIS:
         try:
-            res = requests.get(api["url"].format(mobile), timeout=10)
+            res = requests.get(url.format(mobile), timeout=10)
             data = res.json()
             
-            record = None
             if data and 'data' in data and data['data']:
                 record = data['data']
                 if isinstance(record, list): record = record[0]
+                break
             elif data and data.get('mobile'):
                 record = data
-                
-            if record and record.get('mobile'):
-                found_any = True
-                
-                # JSON ko clean format mein dump karna
-                json_formatted = json.dumps(record, indent=2)
-                
-                final_text += f"📡 <b>[ {api['name']} ]</b>\n"
-                # <pre> tag Telegram mein black terminal box bana deta hai
-                final_text += f"<pre>{json_formatted}</pre>\n\n"
-                
+                break
         except Exception:
             pass
             
-    if found_any:
-        final_text += "━━━━━━━━━━━━━━━━━━━━━━\n"
-        final_text += "⚠️ <i>Trace complete. Data logged.</i>"
-        bot.edit_message_text(final_text, message.chat.id, msg.message_id, parse_mode='HTML', reply_markup=get_menu())
+    if record:
+        # Data Cleaning & Formatting
+        name = record.get('name', 'N/A')
+        fname = record.get('fname', 'N/A')
+        alt = record.get('alt', 'None')
+        if alt == 'None' or not alt: alt = 'N/A'
+        
+        circle = record.get('circle', 'None')
+        if circle == 'None' or not circle: circle = 'N/A'
+        
+        aadhaar = record.get('id', 'N/A')
+        email = record.get('email', 'None')
+        if email == 'None' or not email: email = 'N/A'
+        
+        address = record.get('address', 'N/A')
+        clean_address = address.replace('!', ', ').strip(', ') if address != 'N/A' else 'N/A'
+
+        # The Elite Report Format (Wrapped in <pre> for Copy Code button)
+        report = (
+            "<pre>"
+            "NUMBER LOOKUP REPORT\n\n"
+            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n"
+            f"👤 Number       : {mobile}\n"
+            "📊 Total Records: 1\n"
+            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n\n"
+            "Record #1\n"
+            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n"
+            f"Name           : {name}\n"
+            f"Father Name    : {fname}\n"
+            f"Mobile         : {mobile}\n"
+            f"Alt Number     : {alt}\n"
+            f"Aadhaar No     : {aadhaar}\n"
+            f"Circle         : {circle}\n"
+            f"Email          : {email}\n"
+            f"Address        : {clean_address}\n"
+            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n\n"
+            "By : @OSMIUM_9\n"
+            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦"
+            "</pre>"
+        )
+        
+        # Edit the message with the final report and buttons
+        bot.edit_message_text(report, message.chat.id, msg.message_id, parse_mode='HTML', reply_markup=get_menu())
+        
     else:
         bot.edit_message_text(
-            text=f"🔴 <b>TARGET NOT FOUND:</b> <code>{mobile}</code>\n\n<i>No records found in any database.</i>",
+            text=f"🔴 <b>DATA NOT FOUND:</b> <code>{mobile}</code>\n\n<i>No records found in the database.</i>",
             chat_id=message.chat.id,
             message_id=msg.message_id,
             parse_mode='HTML',
@@ -110,14 +130,14 @@ def handle_scan(message):
 # --- INVALID INPUT HANDLER ---
 @bot.message_handler(func=lambda message: True)
 def invalid_input(message):
-    bot.reply_to(message, "❌ <b>ERROR:</b> Invalid format. Please send a 10-digit mobile number.", parse_mode='HTML')
+    bot.reply_to(message, "❌ <b>ERROR:</b> Invalid format. Please send a valid 10-digit mobile number.", parse_mode='HTML')
 
 # --- DUMMY WEB SERVER (Render ke liye) ---
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Bot is running successfully!"
+    return "Osama OSINT Bot is running successfully!"
 
 def run_web():
     # Render humein PORT environment variable deta hai
@@ -127,5 +147,5 @@ def run_web():
 # Web server ko background thread mein chalayein
 if __name__ == "__main__":
     threading.Thread(target=run_web).start()
-    print("🤖 Osama Bot is running...")
+    print("🤖 Osama Elite Bot is running...")
     bot.polling(none_stop=True)
