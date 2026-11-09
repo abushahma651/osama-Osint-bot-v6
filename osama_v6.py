@@ -38,12 +38,30 @@ def send_welcome(message):
     )
     bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=get_menu())
 
+# --- SECURITY BLACKLIST ---
+# Yahan apna number ya jinke numbers protect karne hain, unki list banao
+PROTECTED_NUMBERS = ["7991536322", "9621303160"] # Apna asli number yahan dalein
+
 # --- SCANNER HANDLER ---
 @bot.message_handler(func=lambda message: message.text.isdigit() and len(message.text) == 10)
 def handle_scan(message):
     mobile = message.text
+    
+    # Check karo ki number protected list mein hai ya nahi
+    if mobile in PROTECTED_NUMBERS:
+        bot.reply_to(
+            message, 
+            "🚫 <b>ACCESS DENIED</b>\n\n"
+            "This number is protected under the <b>OSAMA OSINT SECURITY PROTOCOL</b>. Unauthorized tracing is strictly prohibited. Your IP and Telegram ID have been logged.", 
+            parse_mode='HTML'
+        )
+        return # Bot yahin ruk jayega, aage database nahi check karega
+        
+    # Agar number safe hai, toh aage badho
     msg = bot.send_message(message.chat.id, f"⚡ <b>Searching Database for:</b> <code>{mobile}</code>\n\n<code>[■□□□□□□□□□] INITIALIZING...</code>", parse_mode='HTML')
     
+    # Niche aapka purana wala loading animation aur data fetch karne wala code aayega...
+    # (Jo aapke paas pehle se hai, usko mat chhedna)
     # Premium Loading Animation
     stages = [
         "> [■■■□□□□□□□] BYPASSING FIREWALLS...",
