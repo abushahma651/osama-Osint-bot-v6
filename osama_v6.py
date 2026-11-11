@@ -14,11 +14,8 @@ YOUR_CHAT_ID = os.environ.get('CHAT_ID')
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # API NODES
-APIS = [
-    "https://tfqdeadlo-1-78bapi.hf.space/search?mobile={}",
-    "https://tfqdeadlo-850crfastsearch.hf.space/search/{}",
-    "https://tfqdeadlo-inddataapi.hf.space/search?mobile={}"
-]
+# NAYA API URL
+NEW_API_URL = "https://osama-db-api.onrender.com/search?mobile={}"
 
 # --- MENU (CONTACT DEVELOPER BUTTON) ---
 def get_menu():
@@ -76,21 +73,23 @@ def handle_scan(message):
         
     record = None
     
-    # Try all APIs until we find a record
-    for url in APIS:
-        try:
-            res = requests.get(url.format(mobile), timeout=10)
-            data = res.json()
-            
-            if data and 'data' in data and data['data']:
+    # 🔍 NAYI API SE DATA FETCH KARNA
+try:
+    res = requests.get(NEW_API_URL.format(mobile), timeout=15)
+    if res.status_code == 200:
+        data = res.json()
+        
+        # Naye API ka response check karna
+        if isinstance(data, list) and len(data) > 0:
+            record = data[0]
+        elif isinstance(data, dict):
+            if 'data' in data and data['data']:
                 record = data['data']
                 if isinstance(record, list): record = record[0]
-                break
-            elif data and data.get('mobile'):
+            elif data.get('mobile') or data.get('phone'):
                 record = data
-                break
-        except Exception:
-            pass
+except Exception as e:
+    print(f"API Error: {e}")
             
     if record:
         # Data Cleaning & Formatting
