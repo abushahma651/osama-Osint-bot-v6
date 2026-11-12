@@ -11,133 +11,157 @@ from telebot import types
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 YOUR_CHAT_ID = os.environ.get('CHAT_ID')
 
+# =====================================================================
+# 👇 DONO APIs KE LINKS (Base URL same hai) 👇
+# =====================================================================
+API_BASE_URL = "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"
+# =====================================================================
+
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# API NODES
-# NAYA API URL
-NEW_API_URL = "https://osama-db-api.onrender.com/search?mobile={}"
+# --- SECURITY BLACKLIST (Mobile & Aadhaar dono daal sakte hain) ---
+PROTECTED_NUMBERS = ["9876543210", "123456789012"] 
 
 # --- MENU (CONTACT DEVELOPER BUTTON) ---
 def get_menu():
     markup = types.InlineKeyboardMarkup(row_width=1)
-    # Chat ID ke through direct chat open karne ka link
     btn_dev = types.InlineKeyboardButton("👨‍💻 Contact Developer (Osama)", url=f"tg://user?id={YOUR_CHAT_ID}")
     markup.add(btn_dev)
     return markup
 
-# --- START COMMAND (Simple & Clean) ---
+# --- START COMMAND ---
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     text = (
-        "🟢 <b>OSAMA OSINT ENGINE</b>\n\n"
-        "Send me any 10-digit mobile number, and I will provide you with all the details related to it.\n\n"
+        "🟢 <b>OSAMA OSINT ENGINE v8.0</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "Send me any <b>10-digit Mobile Number</b> or <b>12-digit Aadhaar Number</b>, and I will provide you with all the details related to it.\n\n"
         "⚠️ <i>All queries are logged. Use strictly for educational purposes.</i>"
     )
     bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=get_menu())
 
-# --- SECURITY BLACKLIST ---
-# Yahan apna number ya jinke numbers protect karne hain, unki list banao
-PROTECTED_NUMBERS = ["7991536322", "9621303160"] # Apna asli number yahan dalein
-
-# --- SCANNER HANDLER ---
-@bot.message_handler(func=lambda message: message.text.isdigit() and len(message.text) == 10)
+# --- SCANNER HANDLER (Mobile + Aadhaar) ---
+@bot.message_handler(func=lambda message: message.text.isdigit() and len(message.text) in [10, 12])
 def handle_scan(message):
-    mobile = message.text
+    query = message.text
+    user_id = message.from_user.id
+    username = message.from_user.username
+    first_name = message.from_user.first_name
     
-    # Check karo ki number protected list mein hai ya nahi
-    if mobile in PROTECTED_NUMBERS:
+    # Check Type
+    if len(query) == 10:
+        query_type = "MOBILE"
+    else:
+        query_type = "AADHAAR"
+
+    # 🔥 ADMIN LOGGING SYSTEM
+    if str(user_id) != str(YOUR_CHAT_ID):
+        log_message = (
+            f"🚨 <b>NEW SEARCH DETECTED</b> 🚨\n\n"
+            f"👤 <b>Name:</b> {first_name}\n"
+            f"🔗 <b>Username:</b> @{username if username else 'No Username'}\n"
+            f"🆔 <b>User ID:</b> <code>{user_id}</code>\n"
+            f"🕵️ <b>Type:</b> {query_type}\n"
+            f"🔍 <b>Searched Query:</b> <code>{query}</code>"
+        )
+        try:
+            bot.send_message(YOUR_CHAT_ID, log_message, parse_mode='HTML')
+        except Exception:
+            pass
+
+    # 🚫 BLACKLIST CHECK
+    if query in PROTECTED_NUMBERS:
         bot.reply_to(
             message, 
             "🚫 <b>ACCESS DENIED</b>\n\n"
-            "This number is protected under the <b>OSAMA OSINT SECURITY PROTOCOL</b>. Unauthorized tracing is strictly prohibited. Your IP and Telegram ID have been logged.", 
+            "This identity is protected under the <b>OSAMA OSINT SECURITY PROTOCOL</b>. Unauthorized tracing is strictly prohibited.", 
             parse_mode='HTML'
         )
-        return # Bot yahin ruk jayega, aage database nahi check karega
+        return
         
-    # Agar number safe hai, toh aage badho
-    msg = bot.send_message(message.chat.id, f"⚡ <b>Searching Database for:</b> <code>{mobile}</code>\n\n<code>[■□□□□□□□□□] INITIALIZING...</code>", parse_mode='HTML')
+    msg = bot.send_message(message.chat.id, f"⚡ <b>Searching {query_type} Database for:</b> <code>{query}</code>\n\n<code>[■□□□□□□□□□] INITIALIZING...</code>", parse_mode='HTML')
     
-    # Niche aapka purana wala loading animation aur data fetch karne wala code aayega...
-    # (Jo aapke paas pehle se hai, usko mat chhedna)
     # Premium Loading Animation
     stages = [
-        "> [■■■□□□□□□□] BYPASSING FIREWALLS...",
-        "> [■■■■■□□□□□] QUERYING 3 NODES...",
+        f"> [■■■□□□□□□□] BYPASSING {query_type} FIREWALLS...",
+        "> [■■■■■□□□□□] QUERYING NODES...",
         "> [■■■■■■■■□□] EXTRACTING RECORDS...",
         "> [■■■■■■■■■■] FORMATTING DATA..."
     ]
     
     for stage in stages:
-        time.sleep(0.6)
-        bot.edit_message_text(f"⚡ <b>Searching Database for:</b> <code>{mobile}</code>\n\n<code>{stage}</code>", message.chat.id, msg.message_id, parse_mode='HTML')
+        time.sleep(0.5)
+        bot.edit_message_text(f"⚡ <b>Searching {query_type} Database for:</b> <code>{query}</code>\n\n<code>{stage}</code>", message.chat.id, msg.message_id, parse_mode='HTML')
         
-    record = None
+    records = []
     
-    # 🔍 NAYI API SE DATA FETCH KARNA
-try:
-    res = requests.get(NEW_API_URL.format(mobile), timeout=15)
-    if res.status_code == 200:
-        data = res.json()
-        
-        # Naye API ka response check karna
-        if isinstance(data, list) and len(data) > 0:
-            record = data[0]
-        elif isinstance(data, dict):
-            if 'data' in data and data['data']:
-                record = data['data']
-                if isinstance(record, list): record = record[0]
-            elif data.get('mobile') or data.get('phone'):
-                record = data
-except Exception as e:
-    print(f"API Error: {e}")
+    # 🔍 API SE DATA FETCH KARNA
+    try:
+        res = requests.get(API_BASE_URL.format(query), timeout=20)
+        if res.status_code == 200:
+            data = res.json()
+            if data.get('status') == 'success' and 'data' in data:
+                records = data['data']
+    except Exception as e:
+        print(f"API Error: {e}")
             
-    if record:
-        # Data Cleaning & Formatting
-        name = record.get('name', 'N/A')
-        fname = record.get('fname', 'N/A')
-        alt = record.get('alt', 'None')
-        if alt == 'None' or not alt: alt = 'N/A'
-        
-        circle = record.get('circle', 'None')
-        if circle == 'None' or not circle: circle = 'N/A'
-        
-        aadhaar = record.get('id', 'N/A')
-        email = record.get('email', 'None')
-        if email == 'None' or not email: email = 'N/A'
-        
-        address = record.get('address', 'N/A')
-        clean_address = address.replace('!', ', ').strip(', ') if address != 'N/A' else 'N/A'
+    if records:
+        # Agar multiple records hain, toh sab dikhayenge
+        for idx, record in enumerate(records, 1):
+            # 🛠️ Data Extraction & Cleaning
+            name = record.get('name', 'N/A')
+            fname = record.get('fname', 'N/A')
+            
+            mobile = record.get('mobile', query if query_type == "MOBILE" else 'N/A')
+            alt = record.get('alt', 'None')
+            if alt == 'None' or not alt: alt = 'N/A'
+            
+            aadhaar = record.get('id', query if query_type == "AADHAAR" else 'N/A')
+            
+            circle = record.get('circle', 'None')
+            if circle == 'None' or not circle: circle = 'N/A'
+            
+            email = record.get('email', 'None')
+            if email == 'None' or not email: email = 'N/A'
+            
+            address = record.get('address', 'N/A')
+            clean_address = address.replace('!', ', ').strip(', ') if address != 'N/A' else 'N/A'
 
-        # The Elite Report Format (Wrapped in <pre> for Copy Code button)
-        report = (
-            "<pre>"
-            "NUMBER LOOKUP REPORT\n\n"
-            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n"
-            f"👤 Number       : {mobile}\n"
-            "📊 Total Records: 1\n"
-            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n\n"
-            "Record #1\n"
-            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n"
-            f"Name           : {name}\n"
-            f"Father Name    : {fname}\n"
-            f"Mobile         : {mobile}\n"
-            f"Alt Number     : {alt}\n"
-            f"Aadhaar No     : {aadhaar}\n"
-            f"Circle         : {circle}\n"
-            f"Email          : {email}\n"
-            f"Address        : {clean_address}\n"
-            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n\n"
-            "By : @OSMIUM_9\n"
-            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦"
-            "</pre>"
-        )
-        
-        # Edit the message with the final report and buttons
-        bot.edit_message_text(report, message.chat.id, msg.message_id, parse_mode='HTML', reply_markup=get_menu())
+            # 📄 ELITE REPORT FORMAT
+            report = (
+                "<pre>"
+                "OSINT LOOKUP REPORT\n\n"
+                "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n"
+                f"👤 Query        : {query}\n"
+                f"📊 Type         : {query_type}\n"
+                f"📁 Record       : {idx} of {len(records)}\n"
+                "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n\n"
+                "Record Details\n"
+                "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n"
+                f"Name           : {name}\n"
+                f"Father Name    : {fname}\n"
+                f"Mobile         : {mobile}\n"
+                f"Alt Number     : {alt}\n"
+                f"Aadhaar No     : {aadhaar}\n"
+                f"Circle         : {circle}\n"
+                f"Email          : {email}\n"
+                f"Address        : {clean_address}\n"
+                "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n\n"
+                "By : @OSMIUM_9\n"
+                "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦"
+                "</pre>"
+            )
+            
+            # Har record ke liye alag message bhejenge (taaki lambe messages truncate na ho)
+            if idx == 1:
+                bot.edit_message_text(report, message.chat.id, msg.message_id, parse_mode='HTML', reply_markup=get_menu())
+            else:
+                bot.send_message(message.chat.id, report, parse_mode='HTML', reply_markup=get_menu())
+                time.sleep(0.5) # Thoda gap taaki Telegram block na kare
         
     else:
         bot.edit_message_text(
-            text=f"🔴 <b>DATA NOT FOUND:</b> <code>{mobile}</code>\n\n<i>No records found in the database.</i>",
+            text=f"🔴 <b>DATA NOT FOUND:</b> <code>{query}</code>\n\n<i>No records found for this {query_type}.</i>",
             chat_id=message.chat.id,
             message_id=msg.message_id,
             parse_mode='HTML',
@@ -147,22 +171,20 @@ except Exception as e:
 # --- INVALID INPUT HANDLER ---
 @bot.message_handler(func=lambda message: True)
 def invalid_input(message):
-    bot.reply_to(message, "❌ <b>ERROR:</b> Invalid format. Please send a valid 10-digit mobile number.", parse_mode='HTML')
+    bot.reply_to(message, "❌ <b>ERROR:</b> Invalid format. Please send a valid 10-digit Mobile Number or 12-digit Aadhaar Number.", parse_mode='HTML')
 
 # --- DUMMY WEB SERVER (Render ke liye) ---
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Osama OSINT Bot is running successfully!"
+    return "Osama OSINT Bot (Dual API) is running successfully!"
 
 def run_web():
-    # Render humein PORT environment variable deta hai
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
-# Web server ko background thread mein chalayein
 if __name__ == "__main__":
     threading.Thread(target=run_web).start()
-    print("🤖 Osama Elite Bot is running...")
+    print("🤖 Osama Elite Bot v8.0 (Dual API) is running...")
     bot.polling(none_stop=True)
