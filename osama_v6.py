@@ -12,15 +12,21 @@ BOT_TOKEN = os.environ.get('BOT_TOKEN')
 YOUR_CHAT_ID = os.environ.get('CHAT_ID')
 
 # =====================================================================
-# 👇 DONO APIs KE LINKS (Base URL same hai) 👇
+# 👇 NAYA API URL 👇
 # =====================================================================
 API_BASE_URL = "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"
 # =====================================================================
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# --- SECURITY BLACKLIST (Mobile & Aadhaar dono daal sakte hain) ---
-PROTECTED_NUMBERS = ["9876543210", "123456789012"] 
+# =====================================================================
+# 👇 YAHAN APNA NUMBER ADD KAREIN 👇
+# =====================================================================
+# Apna number double quotes ("") ke andar dalein. 
+# Agar 10 digit ka mobile hai toh aise: "7991536322"
+# Agar 12 digit ka aadhaar hai toh aise: "723229708091"
+PROTECTED_NUMBERS = ["9621303160", "7991536322", 8604302624]  
+# =====================================================================
 
 # --- MENU (CONTACT DEVELOPER BUTTON) ---
 def get_menu():
@@ -69,7 +75,7 @@ def handle_scan(message):
         except Exception:
             pass
 
-    # 🚫 BLACKLIST CHECK
+    # 🚫 BLACKLIST CHECK (Yahan aapka number check hoga)
     if query in PROTECTED_NUMBERS:
         bot.reply_to(
             message, 
@@ -106,58 +112,53 @@ def handle_scan(message):
         print(f"API Error: {e}")
             
     if records:
-        # Agar multiple records hain, toh sab dikhayenge
-        for idx, record in enumerate(records, 1):
-            # 🛠️ Data Extraction & Cleaning
-            name = record.get('name', 'N/A')
-            fname = record.get('fname', 'N/A')
-            
-            mobile = record.get('mobile', query if query_type == "MOBILE" else 'N/A')
-            alt = record.get('alt', 'None')
-            if alt == 'None' or not alt: alt = 'N/A'
-            
-            aadhaar = record.get('id', query if query_type == "AADHAAR" else 'N/A')
-            
-            circle = record.get('circle', 'None')
-            if circle == 'None' or not circle: circle = 'N/A'
-            
-            email = record.get('email', 'None')
-            if email == 'None' or not email: email = 'N/A'
-            
-            address = record.get('address', 'N/A')
-            clean_address = address.replace('!', ', ').strip(', ') if address != 'N/A' else 'N/A'
+        # SPAM FIX: Hum sirf pehla record (records[0]) uthayenge
+        record = records[0]
+        
+        # 🛠️ Data Extraction & Cleaning
+        name = record.get('name', 'N/A')
+        fname = record.get('fname', 'N/A')
+        
+        mobile = record.get('mobile', query if query_type == "MOBILE" else 'N/A')
+        alt = record.get('alt', 'None')
+        if alt == 'None' or not alt: alt = 'N/A'
+        
+        aadhaar = record.get('id', query if query_type == "AADHAAR" else 'N/A')
+        
+        circle = record.get('circle', 'None')
+        if circle == 'None' or not circle: circle = 'N/A'
+        
+        email = record.get('email', 'None')
+        if email == 'None' or not email: email = 'N/A'
+        
+        address = record.get('address', 'N/A')
+        clean_address = address.replace('!', ', ').strip(', ') if address != 'N/A' else 'N/A'
 
-            # 📄 ELITE REPORT FORMAT
-            report = (
-                "<pre>"
-                "OSINT LOOKUP REPORT\n\n"
-                "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n"
-                f"👤 Query        : {query}\n"
-                f"📊 Type         : {query_type}\n"
-                f"📁 Record       : {idx} of {len(records)}\n"
-                "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n\n"
-                "Record Details\n"
-                "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n"
-                f"Name           : {name}\n"
-                f"Father Name    : {fname}\n"
-                f"Mobile         : {mobile}\n"
-                f"Alt Number     : {alt}\n"
-                f"Aadhaar No     : {aadhaar}\n"
-                f"Circle         : {circle}\n"
-                f"Email          : {email}\n"
-                f"Address        : {clean_address}\n"
-                "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n\n"
-                "By : @OSMIUM_9\n"
-                "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦"
-                "</pre>"
-            )
-            
-            # Har record ke liye alag message bhejenge (taaki lambe messages truncate na ho)
-            if idx == 1:
-                bot.edit_message_text(report, message.chat.id, msg.message_id, parse_mode='HTML', reply_markup=get_menu())
-            else:
-                bot.send_message(message.chat.id, report, parse_mode='HTML', reply_markup=get_menu())
-                time.sleep(0.5) # Thoda gap taaki Telegram block na kare
+        # 📄 ELITE REPORT FORMAT
+        report = (
+            "<pre>"
+            "OSINT LOOKUP REPORT\n\n"
+            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n"
+            f"👤 Query        : {query}\n"
+            f"📊 Type         : {query_type}\n"
+            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n\n"
+            "Record Details\n"
+            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n"
+            f"Name           : {name}\n"
+            f"Father Name    : {fname}\n"
+            f"Mobile         : {mobile}\n"
+            f"Alt Number     : {alt}\n"
+            f"Aadhaar No     : {aadhaar}\n"
+            f"Circle         : {circle}\n"
+            f"Email          : {email}\n"
+            f"Address        : {clean_address}\n"
+            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n\n"
+            "By : @OSMIUM_9\n"
+            "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦"
+            "</pre>"
+        )
+        
+        bot.edit_message_text(report, message.chat.id, msg.message_id, parse_mode='HTML', reply_markup=get_menu())
         
     else:
         bot.edit_message_text(
@@ -175,6 +176,19 @@ def invalid_input(message):
 
 # --- DUMMY WEB SERVER (Render ke liye) ---
 app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Osama OSINT Bot (Dual API) is running successfully!"
+
+def run_web():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+if __name__ == "__main__":
+    threading.Thread(target=run_web).start()
+    print("🤖 Osama Elite Bot v8.0 (Dual API) is running...")
+    bot.polling(none_stop=True)
 
 @app.route('/')
 def home():
