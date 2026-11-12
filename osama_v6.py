@@ -25,7 +25,7 @@ bot = telebot.TeleBot(BOT_TOKEN)
 # Apna number double quotes ("") ke andar dalein. 
 # Agar 10 digit ka mobile hai toh aise: "7991536322"
 # Agar 12 digit ka aadhaar hai toh aise: "723229708091"
-PROTECTED_NUMBERS = ["9621303160", "7991536322", "8604302624"]  
+PROTECTED_NUMBERS = ["9621303160", "7991536322", "8604302624", 6204473620"]  
 # =====================================================================
 
 # --- MENU (CONTACT DEVELOPER BUTTON) ---
