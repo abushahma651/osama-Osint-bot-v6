@@ -46,7 +46,6 @@ def get_main_menu():
 # --- RESULT MENU (Contact Button) ---
 def get_result_menu():
     markup = types.InlineKeyboardMarkup(row_width=1)
-    # Button ka naam NERD
     btn_dev = types.InlineKeyboardButton("👨‍💻 Contact Developer (NERD)", url=f"tg://user?id={YOUR_CHAT_ID}")
     markup.add(btn_dev)
     return markup
@@ -80,13 +79,13 @@ def send_welcome(message):
 @bot.message_handler(func=lambda message: message.text == "📱 Mobile Search")
 def prompt_mobile(message):
     if not is_authorized(message.from_user.id): return
-    msg = bot.reply_to(message, "📱 <b>Enter a 10-digit Mobile Number to search:</b>", parse_mode='HTML')
+    msg = bot.reply_to(message, "📱 <b>Enter a 10-digit Mobile Number to search:</b>", parse_mode='HTML', reply_markup=get_main_menu())
     bot.register_next_step_handler(msg, process_search, "MOBILE")
 
 @bot.message_handler(func=lambda message: message.text == "🆔 Aadhaar Search")
 def prompt_aadhaar(message):
     if not is_authorized(message.from_user.id): return
-    msg = bot.reply_to(message, "🆔 <b>Enter a 12-digit Aadhaar Number to search:</b>", parse_mode='HTML')
+    msg = bot.reply_to(message, "🆔 <b>Enter a 12-digit Aadhaar Number to search:</b>", parse_mode='HTML', reply_markup=get_main_menu())
     bot.register_next_step_handler(msg, process_search, "AADHAAR")
 
 # --- ADMIN COMMANDS (ADD/REMOVE/LIST USERS) ---
@@ -136,28 +135,27 @@ def list_allowed_users(message):
     bot.edit_message_text(final_response, message.chat.id, msg.message_id, parse_mode='HTML')
 
 
-# --- SCANNER HANDLER (Direct number detect karne ke liye fallback) ---
-@bot.message_handler(func=lambda message: message.text.isdigit() and len(message.text) in [10, 12])
-def handle_direct_input(message):
-    # Agar user menu use nahi karta aur direct number dalkar bhejta hai
-    query_type = "MOBILE" if len(message.text) == 10 else "AADHAAR"
-    process_search(message, query_type, direct_query=message.text)
-
-
 # --- MAIN SEARCH FUNCTION ---
 def process_search(message, query_type, direct_query=None):
     user_id = message.from_user.id
     if not is_authorized(user_id): return
 
-    # Agar direct_query hai (message.text se), warna next_step_handler se aaya hai
     query = direct_query if direct_query else message.text.strip()
     
+    # 🛑 FIX 1: Agar user ne number ki jagah MENU BUTTON dabaya hai
+    if query == "📱 Mobile Search":
+        prompt_mobile(message)
+        return
+    if query == "🆔 Aadhaar Search":
+        prompt_aadhaar(message)
+        return
+
     # Validation
     if query_type == "MOBILE" and (not query.isdigit() or len(query) != 10):
-        bot.reply_to(message, "❌ Invalid mobile number. Please enter exactly 10 digits.")
+        bot.reply_to(message, "❌ Invalid mobile number. Please enter exactly 10 digits.", reply_markup=get_main_menu())
         return
     if query_type == "AADHAAR" and (not query.isdigit() or len(query) != 12):
-        bot.reply_to(message, "❌ Invalid Aadhaar number. Please enter exactly 12 digits.")
+        bot.reply_to(message, "❌ Invalid Aadhaar number. Please enter exactly 12 digits.", reply_markup=get_main_menu())
         return
 
     username = message.from_user.username
@@ -184,7 +182,7 @@ def process_search(message, query_type, direct_query=None):
             message, 
             "🚫 <b>ACCESS DENIED</b>\n\n"
             "This identity is protected under the <b>NERD OSINT SECURITY PROTOCOL</b>. Unauthorized tracing is strictly prohibited.", 
-            parse_mode='HTML'
+            parse_mode='HTML', reply_markup=get_main_menu()
         )
         return
         
@@ -233,7 +231,6 @@ def process_search(message, query_type, direct_query=None):
         address = record.get('address', 'N/A')
         clean_address = address.replace('!', ', ').strip(', ') if address != 'N/A' else 'N/A'
 
-        # 🛠️ YAHAN BY : @OSMIUM_9 WAPAS KAR DIYA HAI
         report = (
             "<pre>"
             "NERD OSINT REPORT\n\n"
@@ -257,8 +254,9 @@ def process_search(message, query_type, direct_query=None):
             "</pre>"
         )
         
-        # Data milne ke baad Contact Developer (NERD) button aayega
+        # Report ke saath Main Menu bhi bhejenge
         bot.edit_message_text(report, message.chat.id, msg.message_id, parse_mode='HTML', reply_markup=get_result_menu())
+        bot.send_message(message.chat.id, "Please select an option from the menu to search again.", reply_markup=get_main_menu())
         
     else:
         bot.edit_message_text(
@@ -268,15 +266,32 @@ def process_search(message, query_type, direct_query=None):
             parse_mode='HTML',
             reply_markup=get_result_menu()
         )
+        bot.send_message(message.chat.id, "Please select an option from the menu to search again.", reply_markup=get_main_menu())
 
 
-# --- INVALID INPUT HANDLER ---
+# --- 🛑 FIX 2: Agar user direct number bhejta hai bina menu dabaye ---
 @bot.message_handler(func=lambda message: True)
 def invalid_input(message):
     if not is_authorized(message.from_user.id):
         bot.reply_to(message, "🚫 <b>ACCESS DENIED</b>", parse_mode='HTML')
         return
-    bot.reply_to(message, "❌ <b>ERROR:</b> Invalid format. Please select an option from the menu or send a valid 10/12 digit number.", parse_mode='HTML', reply_markup=get_main_menu())
+        
+    # Agar user direct number type karta hai, toh use menu par redirect karein
+    if message.text.isdigit():
+        bot.reply_to(
+            message, 
+            "⚠️ <b>Please use the menu buttons below first.</b>\n"
+            "Select 'Mobile Search' or 'Aadhaar Search' to begin.", 
+            parse_mode='HTML', 
+            reply_markup=get_main_menu()
+        )
+    else:
+        bot.reply_to(
+            message, 
+            "❌ <b>Invalid Input.</b>\nPlease select an option from the menu below.", 
+            parse_mode='HTML', 
+            reply_markup=get_main_menu()
+        )
 
 # --- DUMMY WEB SERVER (Render ke liye) ---
 app = Flask(__name__)
