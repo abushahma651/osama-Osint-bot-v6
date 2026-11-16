@@ -25,15 +25,23 @@ ALLOWED_USERS = [
     "5704555109", "901112667", "8659201578"
 ]
 
-# Menu Buttons List for bug fixing
+# Updated Button Texts (Clear LIVE / SOON status)
+BTN_NUM = "✅ [LIVE] 📱 NUM LOOKUP"
+BTN_AADHAAR = "✅ [LIVE] 🆔 AADHAAR INFO"
+
 ALL_MENU_BUTTONS = [
-    "✅ 📱 Num Lookup", "✅ 🆔 Aadhaar Info", 
-    "⏳ ☎️ Truecaller", "⏳ 📍 Tracker", "⏳ 🚗 Vehicle", "⏳ 🏦 IFSC", "⏳ 📲 IMEI",
-    "⏳ 🌐 IP", "⏳ 📍 Pincode", "⏳ 🏢 GST", "⏳ 📸 Instagram", "⏳ ✈️ TG to Number",
-    "⏳ 💳 PAN Lookup", "⏳ 🔗 PAN GST", "⏳ 🇵🇰 Pakistan Number", "⏳ ✉️ SMS", 
-    "⏳ 🚨 Chalan", "⏳ 💳 UPI", "⏳ 👨‍👩‍👧 Family", "⏳ 🔍 Name Search",
-    "⏳ 🚗➡️📱 Vehicle to Num", "⏳ 💰 Fampay", "⏳ 🎮 BGMI Info", 
-    "✨ Features", "📖 How to Use", "📊 My Credits", "🛒 Buy Credits", "🎁 Daily Claim"
+    BTN_NUM, BTN_AADHAAR,
+    "⏳ [SOON] 🧠 TG ID → Num", "⏳ [SOON] 👤 TG User → Num",
+    "⏳ [SOON] 👥 Aadhaar Family", "⏳ [SOON] 📧 Email → Num",
+    "⏳ [SOON] 🌐 Web Scraper", "⏳ [SOON] 🚗 Vehicle → Num",
+    "⏳ [SOON] 🏡 Vehicle Address", "⏳ [SOON] 📄 RC → PDF",
+    "⏳ [SOON] 🚨 Vehicle Challan", "⏳ [SOON] 📸 Instagram Info",
+    "⏳ [SOON] 📝 Name → Random Info", "⏳ [SOON] 🆔 Aadhaar → Ration",
+    "⏳ [SOON] 💳 PAN Info", "⏳ [SOON] ⚪ LPG Info",
+    "⏳ [SOON] 🚙 Num → Vehicle", "⏳ [SOON] 🎮 BGMI Info",
+    "✨ Features", "📖 How to Use",
+    "📊 My Credits", "🛒 Buy Credits",
+    "🎁 Daily Claim"
 ]
 
 def is_authorized(user_id):
@@ -47,25 +55,32 @@ def get_user_credits(user_id):
         USER_DATA[user_id] = {"credits": 5, "last_claim": 0}
     return USER_DATA[user_id]["credits"]
 
-# Aesthetic Line
-LINE = "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦"
-
 # --- KEYBOARDS ---
 def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("✅ 📱 Num Lookup", "✅ 🆔 Aadhaar Info")
-    markup.row("⏳ ☎️ Truecaller", "⏳ 📍 Tracker")
-    markup.row("⏳ 🚗 Vehicle", "⏳ 🏦 IFSC", "⏳ 📲 IMEI")
-    markup.row("⏳ 🌐 IP", "⏳ 📍 Pincode", "⏳ 🏢 GST")
-    markup.row("⏳ 📸 Instagram", "⏳ ✈️ TG to Number")
-    markup.row("⏳ 💳 PAN Lookup", "⏳ 🔗 PAN GST")
-    markup.row("⏳ 🇵🇰 Pakistan Number", "⏳ ✉️ SMS", "⏳ 🚨 Chalan")
-    markup.row("⏳ 💳 UPI", "⏳ 👨‍👩‍👧 Family", "⏳ 🔍 Name Search")
-    markup.row("⏳ 🚗➡️📱 Vehicle to Num", "⏳ 💰 Fampay")
-    markup.row("⏳ 🎮 BGMI Info")
+    
+    # Top Priority (ACTIVE APIs)
+    markup.row(BTN_NUM)
+    markup.row(BTN_AADHAAR)
+    
+    # Divider for upcoming features
+    markup.row("🔹 PREMIUM FEATURES (SOON) 🔹")
+    
+    # Coming Soon Buttons
+    markup.row("⏳ [SOON] 🧠 TG ID → Num", "⏳ [SOON] 👤 TG User → Num")
+    markup.row("⏳ [SOON] 👥 Aadhaar Family", "⏳ [SOON] 📧 Email → Num")
+    markup.row("⏳ [SOON] 🌐 Web Scraper", "⏳ [SOON] 🚗 Vehicle → Num")
+    markup.row("⏳ [SOON] 🏡 Vehicle Address", "⏳ [SOON] 📄 RC → PDF")
+    markup.row("⏳ [SOON] 🚨 Vehicle Challan", "⏳ [SOON] 📸 Instagram Info")
+    markup.row("⏳ [SOON] 📝 Name → Random Info", "⏳ [SOON] 🆔 Aadhaar → Ration")
+    markup.row("⏳ [SOON] 💳 PAN Info", "⏳ [SOON] ⚪ LPG Info")
+    markup.row("⏳ [SOON] 🚙 Num → Vehicle", "⏳ [SOON] 🎮 BGMI Info")
+    
+    # Info & Account Buttons
     markup.row("✨ Features", "📖 How to Use")
     markup.row("📊 My Credits", "🛒 Buy Credits")
     markup.row("🎁 Daily Claim")
+    
     return markup
 
 def result_menu():
@@ -74,8 +89,10 @@ def result_menu():
     markup.add(btn_dev)
     return markup
 
-# --- TERMINAL STYLE MESSAGES ---
+# Aesthetic Terminal Line
+LINE = "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦"
 
+# --- ACCESS DENIED ---
 def send_access_denied(message):
     text = (
         "<pre>"
@@ -88,12 +105,14 @@ def send_access_denied(message):
         "This is a private NERD OSINT tool.\n"
         "You don't have permission to use it.\n"
         f"{LINE}\n"
-        "👉 Contact NERD via the button below.\n"
+        "👉 To get VIP access and credits,\n"
+        "contact NERD via the button below.\n"
         f"{LINE}"
         "</pre>"
     )
     bot.reply_to(message, text, parse_mode='HTML', reply_markup=result_menu())
 
+# --- AUTO DELETE ---
 def delete_message_later(chat_id, message_id, delay=60):
     time.sleep(delay)
     try:
@@ -101,38 +120,46 @@ def delete_message_later(chat_id, message_id, delay=60):
     except Exception:
         pass
 
-# --- START COMMAND (JSON PROFILE) ---
+# --- START COMMAND ---
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = str(message.from_user.id)
     first_name = message.from_user.first_name
     credits = get_user_credits(user_id)
     
+    image_url = "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+    
     profile_text = (
         "<pre>"
         "╔══════════════════════════════╗\n"
         "║      NERD PRIVATE OSINT      ║\n"
         "╚══════════════════════════════╝\n"
-        f"👤 USER ID    : {user_id}\n"
-        f"👑 NAME       : {first_name}\n"
-        f"💳 CREDITS    : {credits}\n"
+        "👋 Welcome!\n"
         f"{LINE}\n"
-        "📡 SYSTEM STATUS\n"
-        "✅ NODE 1 : Indian Number [LIVE]\n"
-        "✅ NODE 2 : Aadhaar Info  [LIVE]\n"
-        "⏳ NODE 3+ : Coming Soon\n"
+        f"👤 NAME    : {first_name}\n"
+        f"🆔 USER ID : {user_id}\n"
+        f"💳 CREDITS : {credits}\n"
         f"{LINE}\n"
-        "👑 OWNER      : @OSMIUM_9\n"
-        "⚠️ REPORT AUTO-DELETES IN 60s.\n"
+        "✨ WHAT CAN THIS BOT DO?\n"
+        "🔍 OSINT INTELLIGENCE\n"
+        "🌐 Open Source Intelligence\n"
+        "📱 Number • Username • Domain\n"
+        "📊 Data Discovery • Verification\n"
+        "⚡ Fast • Smart • Reliable\n"
+        f"{LINE}\n"
+        "🚧 NOTE: ONLY 2 APIs ARE ACTIVE.\n"
+        "✅ [LIVE] Indian Number & Aadhaar Info.\n"
+        "⏳ [SOON] Other services coming soon!\n"
+        f"{LINE}\n"
+        "🔒 VIP Access required for searching.\n"
+        "👑 OWNER — @OSMIUM_9\n"
+        "🛡 Privacy • Responsible OSINT\n"
+        "⚠️ Only for lawful research & verified use.\n"
+        f"{LINE}"
         "</pre>"
     )
 
-    if not is_authorized(user_id):
-        bot.send_message(message.chat.id, profile_text, parse_mode='HTML', reply_markup=main_menu())
-        bot.send_message(message.chat.id, "<pre>🔒 SYSTEM LOCKED: VIP ACCESS REQUIRED.</pre>", parse_mode='HTML')
-        return
-
-    bot.send_message(message.chat.id, profile_text, parse_mode='HTML', reply_markup=main_menu())
+    bot.send_photo(message.chat.id, image_url, caption=profile_text, parse_mode='HTML', reply_markup=main_menu())
 
 # --- HOW TO USE ---
 @bot.message_handler(func=lambda message: message.text == "📖 How to Use")
@@ -159,24 +186,24 @@ def features_list(message):
         "<pre>"
         "✨ ALL FEATURES ✨\n"
         f"{LINE}\n"
-        "✅ 📱 Num Lookup\n"
-        "✅ 🆔 Aadhaar Info\n"
-        "⏳ 🧠 TG ID → Num\n"
-        "⏳ 👤 TG User → Num\n"
-        "⏳ 👥 Aadhaar Family\n"
-        "⏳ 📧 Email → Num\n"
-        "⏳ 🌐 Web Scraper\n"
-        "⏳ 🚗 Vehicle → Num\n"
-        "⏳ 🏡 Vehicle Address\n"
-        "⏳ 📄 RC → PDF\n"
-        "⏳ 🚨 Vehicle Challan\n"
-        "⏳ 📸 Instagram Info\n"
-        "⏳ 📝 Name → Random Info\n"
-        "⏳ 🆔 Aadhaar → Ration\n"
-        "⏳ 💳 PAN Info\n"
-        "⏳ ⚪ LPG Info\n"
-        "⏳ 🚙 Num → Vehicle\n"
-        "⏳ 🎮 BGMI Info\n"
+        "✅ [LIVE] 📱 NUM LOOKUP\n"
+        "✅ [LIVE] 🆔 AADHAAR INFO\n"
+        "⏳ [SOON] 🧠 TG ID → Num\n"
+        "⏳ [SOON] 👤 TG User → Num\n"
+        "⏳ [SOON] 👥 Aadhaar Family\n"
+        "⏳ [SOON] 📧 Email → Num\n"
+        "⏳ [SOON] 🌐 Web Scraper\n"
+        "⏳ [SOON] 🚗 Vehicle → Num\n"
+        "⏳ [SOON] 🏡 Vehicle Address\n"
+        "⏳ [SOON] 📄 RC → PDF\n"
+        "⏳ [SOON] 🚨 Vehicle Challan\n"
+        "⏳ [SOON] 📸 Instagram Info\n"
+        "⏳ [SOON] 📝 Name → Random Info\n"
+        "⏳ [SOON] 🆔 Aadhaar → Ration\n"
+        "⏳ [SOON] 💳 PAN Info\n"
+        "⏳ [SOON] ⚪ LPG Info\n"
+        "⏳ [SOON] 🚙 Num → Vehicle\n"
+        "⏳ [SOON] 🎮 BGMI Info\n"
         f"{LINE}\n"
         "👑 Contact @OSMIUM_9"
         "</pre>"
@@ -267,7 +294,7 @@ def check_credits(message):
     bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu())
 
 # --- WORKING API PROMPTS ---
-@bot.message_handler(func=lambda message: message.text in ["✅ 📱 Num Lookup"])
+@bot.message_handler(func=lambda message: message.text == BTN_NUM)
 def prompt_mobile(message):
     if not is_authorized(message.from_user.id):
         return send_access_denied(message)
@@ -281,7 +308,7 @@ def prompt_mobile(message):
     msg = bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu())
     bot.register_next_step_handler(msg, process_search, "MOBILE")
 
-@bot.message_handler(func=lambda message: message.text == "✅ 🆔 Aadhaar Info")
+@bot.message_handler(func=lambda message: message.text == BTN_AADHAAR)
 def prompt_aadhaar(message):
     if not is_authorized(message.from_user.id):
         return send_access_denied(message)
@@ -301,7 +328,7 @@ def coming_soon(message):
     if not is_authorized(message.from_user.id):
         return send_access_denied(message)
         
-    feature_name = message.text.replace("⏳", "").strip()
+    feature_name = message.text.replace("⏳ [SOON]", "").strip()
     text = (
         "<pre>"
         "⚠️ SYSTEM UPDATE IN PROGRESS\n"
@@ -323,17 +350,17 @@ def process_search(message, query_type, direct_query=None):
 
     query = direct_query if direct_query else message.text.strip()
     
-    # Menu Bug Fix
+    # 🛑 MENU BUG FIX
     if query in ALL_MENU_BUTTONS:
         bot.clear_step_handler(message)
-        if query == "✅ 📱 Num Lookup": prompt_mobile(message)
-        elif query == "✅ 🆔 Aadhaar Info": prompt_aadhaar(message)
-        elif query.startswith("⏳"): coming_soon(message)
+        if query == BTN_NUM: prompt_mobile(message)
+        elif query == BTN_AADHAAR: prompt_aadhaar(message)
         elif query == "📖 How to Use": how_to_use(message)
         elif query == "✨ Features": features_list(message)
         elif query == "📊 My Credits": check_credits(message)
         elif query == "🛒 Buy Credits": buy_credits(message)
         elif query == "🎁 Daily Claim": daily_claim(message)
+        elif query.startswith("⏳"): coming_soon(message)
         return
         
     # Validation
@@ -344,7 +371,7 @@ def process_search(message, query_type, direct_query=None):
         bot.reply_to(message, "<pre>❌ ERROR: Invalid Aadhaar Number.\nPlease enter exactly 12 digits.</pre>", parse_mode='HTML', reply_markup=main_menu())
         return
 
-    # Credits Deduct
+    # 💳 DEDUCT CREDITS
     if user_id != YOUR_CHAT_ID:
         if user_id not in USER_DATA:
             USER_DATA[user_id] = {"credits": 5, "last_claim": 0}
@@ -353,7 +380,7 @@ def process_search(message, query_type, direct_query=None):
             return
         USER_DATA[user_id]["credits"] -= 1
 
-    # Save History
+    # 🔥 SAVE HISTORY
     if user_id not in SEARCH_HISTORY:
         SEARCH_HISTORY[user_id] = []
     SEARCH_HISTORY[user_id].append(query)
@@ -408,8 +435,8 @@ def process_search(message, query_type, direct_query=None):
             f"CREDITS LEFT: {curr_cred}\n"
             "BY          : @OSMIUM_9\n"
             f"{LINE}\n"
-            "⚠️ WARNING: THIS REPORT WILL BE\n"
-            "AUTO-DELETED IN 60 SECONDS.\n"
+            "⚠️ THIS REPORT WILL DELETE IN 60 SECONDS.\n"
+            "SAVE THIS DATA.\n"
             "</pre>"
         )
         
