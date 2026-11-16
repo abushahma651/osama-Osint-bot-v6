@@ -157,7 +157,6 @@ def admin_list(message):
     
     bot.reply_to(message, text, parse_mode='HTML')
 
-# --- UPDATED FULL HISTORY ---
 @bot.message_handler(commands=['history'])
 def admin_history(message):
     if str(message.from_user.id) != YOUR_CHAT_ID: return
@@ -169,12 +168,11 @@ def admin_history(message):
     text = "<pre>📊 FULL SEARCH HISTORY\n" + LINE + "\n"
     for uid, queries in SEARCH_HISTORY.items():
         text += f"👤 User ID : {uid}\n"
-        text += f"🔍 Queries : {', '.join(queries)}\n" # Ab saari queries dikhegi
+        text += f"🔍 Queries : {', '.join(queries)}\n"
         text += f"📈 Total   : {len(queries)}\n"
         text += "------------------------------\n"
     text += "</pre>"
     
-    # Agar history bohot lambi ho jaye toh file bhej dein
     if len(text) > 4000:
         with open("history.txt", "w") as f:
             f.write(text)
@@ -182,7 +180,6 @@ def admin_history(message):
     else:
         bot.reply_to(message, text, parse_mode='HTML')
 
-# --- BROADCAST SYSTEM ---
 @bot.message_handler(commands=['broadcast'])
 def admin_broadcast(message):
     if str(message.from_user.id) != YOUR_CHAT_ID: return
@@ -199,7 +196,7 @@ def admin_broadcast(message):
             bot.send_message(uid, broadcast_format, parse_mode='HTML')
             success_count += 1
         except Exception:
-            pass # Agar user ne bot block kar diya ho
+            pass
             
     bot.reply_to(message, f"<pre>✅ Broadcast sent successfully to {success_count} users.</pre>", parse_mode='HTML')
 
@@ -413,7 +410,7 @@ def process_search(message, query_type, direct_query=None):
             return
         USER_DATA[user_id]["credits"] -= 1
         
-        # 🔥 LIVE ADMIN ALERT (NEW FEATURE)
+        # 🔥 LIVE ADMIN ALERT
         try:
             username = message.from_user.username
             first_name = message.from_user.first_name
@@ -512,5 +509,12 @@ def invalid_input(message):
 app = Flask(__name__)
 @app.route('/')
 def home(): return "NERD PRIVATE OSINT Bot is running!"
+
 def run_web():
-    port = int(os.environ.
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+if __name__ == "__main__":
+    threading.Thread(target=run_web).start()
+    print("🤖 NERD PRIVATE OSINT is running...")
+    bot.polli
