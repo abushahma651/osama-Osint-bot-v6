@@ -515,6 +515,9 @@ def run_web():
     app.run(host='0.0.0.0', port=port)
 
 if __name__ == "__main__":
+    # Yeh line Telegram ko force karegi ki woh purane atke hue messages clear kare
+    bot.remove_webhook() 
+    
     threading.Thread(target=run_web).start()
     print("🤖 NERD PRIVATE OSINT is running...")
-    bot.polli
+    bot.polling(none_stop=True)
