@@ -24,12 +24,8 @@ PROTECTED_NUMBERS = ["9621303160", "7991536322", "8604302624", "6204473620"]
 # =====================================================================
 ALLOWED_USERS = [
     YOUR_CHAT_ID,       # Owner (Aap)
-    "8707785706",       # VIP 1
-    "8898567917",       # VIP 2
-    "6700078527",       # VIP 3
-    "5704555109",       # VIP 4
-    "901112667",        # VIP 5 
-    "8659201578"        # VIP 6
+    "8707785706", "8898567917", "6700078527",
+    "5704555109", "901112667", "8659201578"
 ]
 
 def is_authorized(user_id):
@@ -39,26 +35,26 @@ def get_user_credits(user_id):
     user_id = str(user_id)
     if user_id == YOUR_CHAT_ID:
         return "Unlimited"
-        
     if user_id not in USER_DATA:
         USER_DATA[user_id] = {"credits": 5, "last_claim": 0}
     return USER_DATA[user_id]["credits"]
 
-# --- KEYBOARDS ---
+# --- KEYBOARDS (NEW PREMIUM MENU) ---
 def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    # Priority: Indian and Aadhaar on top
-    markup.row("📱 Indian Number", "🆔 Aadhaar Info")
-    markup.row("☎️ Truecaller", "📍 Tracker")
-    markup.row("🚗 Vehicle", "🏦 IFSC", "📲 IMEI")
-    markup.row("🌐 IP", "📍 Pincode", "🏢 GST")
-    markup.row("📸 Instagram", "✈️ TG to Number")
-    markup.row("💳 PAN Lookup", "🔗 PAN GST")
-    markup.row("🇵🇰 Pakistan Number", "✉️ SMS", "🚨 Chalan")
-    markup.row("💳 UPI", "👨‍👩‍👧 Family", "🔍 Name Search")
-    markup.row("🚗➡️📱 Vehicle to Num", "💰 Fampay")
-    markup.row("🎁 Refer & Earn", "🪙 Check Credits")
-    markup.row("🎁 Daily Claim", "🛒 Buy Credits")
+    markup.row("🔍 Num Lookup", "🧠 TG ID → Num")
+    markup.row("👤 TG User → Num", "📁 Num → All Info")
+    markup.row("🪪 Aadhaar Info", "👥 Aadhaar Family")
+    markup.row("📧 Email → Num", "🌐 Web Scraper")
+    markup.row("🚗 Vehicle → Num", "🏡 Vehicle Address")
+    markup.row("📄 RC → PDF", "🚨 Vehicle Challan")
+    markup.row("📸 Instagram Info", "📝 Name → Random Info")
+    markup.row("🆔 Aadhaar → Ration", "💳 PAN Info")
+    markup.row("⚪ LPG Info", "🚙 Num → Vehicle")
+    markup.row("🎮 BGMI Info", "✨ Features") # Changed FF to BGMI
+    markup.row("📖 How to Use", "📊 My Credits")
+    markup.row("🛒 Buy Credits", "🎁 Daily Claim")
+    markup.row("🎁 Refer & Earn", "🔗 Share Bot")
     return markup
 
 def result_menu():
@@ -66,6 +62,16 @@ def result_menu():
     btn_dev = types.InlineKeyboardButton("👨‍💻 Contact Developer (NERD)", url=f"tg://user?id={YOUR_CHAT_ID}")
     markup.add(btn_dev)
     return markup
+
+# --- ACCESS DENIED HELPER ---
+def send_access_denied(message):
+    text = (
+        "🚫 <b>ACCESS DENIED</b>\n\n"
+        "This is a private NERD OSINT tool. You don't have permission to use it.\n\n"
+        "❌ <b>You don't have credits.</b>\n"
+        "To get VIP access and credits, contact NERD via the button below."
+    )
+    bot.reply_to(message, text, parse_mode='HTML', reply_markup=result_menu())
 
 # --- AUTO DELETE ---
 def delete_message_later(chat_id, message_id, delay=60):
@@ -75,10 +81,11 @@ def delete_message_later(chat_id, message_id, delay=60):
     except Exception:
         pass
 
-# --- START COMMAND ---
+# --- START COMMAND (PREMIUM INTERFACE) ---
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = str(message.from_user.id)
+    first_name = message.from_user.first_name
     
     # Referral Logic
     args = message.text.split()
@@ -89,40 +96,125 @@ def send_welcome(message):
                 USER_DATA[referrer_id] = {"credits": 5, "last_claim": 0}
             USER_DATA[referrer_id]["credits"] += 5
             try:
-                bot.send_message(referrer_id, f"🎉 <b>Referral Bonus!</b>\nYou earned 5 credits because {message.from_user.first_name} joined using your link.", parse_mode='HTML')
+                bot.send_message(referrer_id, f"🎉 <b>Referral Bonus!</b>\nYou earned 5 credits because {first_name} joined using your link.", parse_mode='HTML')
             except Exception:
                 pass
 
-    # 🚫 NEW USERS BLOCKED
-    if not is_authorized(user_id):
-        bot.reply_to(
-            message, 
-            "🚫 <b>ACCESS DENIED</b>\n\n"
-            "This is a private OSINT tool. You do not have permission to use it.\n\n"
-            "👉 <b>To get VIP access and credits, please contact NERD via the button below.</b>", 
-            parse_mode='HTML',
-            reply_markup=result_menu()
-        )
-        return
-
-    credits = get_user_credits(user_id)
+    # Premium Image (Cyber Security Theme)
+    image_url = "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
     
-    # Clean Start Message (Removed 60s text)
+    if is_authorized(user_id):
+        credits = get_user_credits(user_id)
+        text = (
+            f"👋 <b>Welcome, {first_name}</b>\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "✨ <b>What can this bot do?</b>\n\n"
+            "🔍 <b>OSINT INTELLIGENCE</b>\n"
+            "🌐 Open Source Intelligence\n"
+            "📱 Number • Username • Domain\n"
+            "📊 Data Discovery • Verification\n"
+            "⚡ Fast • Smart • Reliable\n\n"
+            f"💳 <b>Your Credits:</b> {credits}\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "👑 <b>OWNER</b> — @OSMIUM_9\n"
+            "🛡 Privacy • Responsible OSINT\n"
+            "⚠️ <i>Only for lawful research & verified use.</i>"
+        )
+    else:
+        text = (
+            f"👋 <b>Welcome, {first_name}</b>\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "✨ <b>What can this bot do?</b>\n\n"
+            "🔍 <b>OSINT INTELLIGENCE</b>\n"
+            "🌐 Open Source Intelligence\n"
+            "📱 Number • Username • Domain\n"
+            "📊 Data Discovery • Verification\n"
+            "⚡ Fast • Smart • Reliable\n\n"
+            "🔒 <i>VIP Access required for searching.</i>\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "👑 <b>OWNER</b> — @OSMIUM_9\n"
+            "🛡 Privacy • Responsible OSINT\n"
+            "⚠️ <i>Only for lawful research & verified use.</i>"
+        )
+
+    # Send Photo with Caption and Menu
+    bot.send_photo(message.chat.id, image_url, caption=text, parse_mode='HTML', reply_markup=main_menu())
+
+# --- HOW TO USE ---
+@bot.message_handler(func=lambda message: message.text == "📖 How to Use")
+def how_to_use(message):
     text = (
-        "🟢 <b>NERD PRIVATE OSINT</b>\n"
+        "📖 <b>*HOW TO USE*</b>\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "Welcome back to NERD PRIVATE OSINT.\n"
-        f"💳 <b>Your Credits:</b> {credits}\n\n"
-        "Select an option from the menu below."
+        "1️⃣ Feature button select karo\n"
+        "2️⃣ Information bhejo (number, id, etc.)\n"
+        "3️⃣ 1 credit per search\n"
+        "4️⃣ Daily claim se free credits lo\n"
+        "5️⃣ Share bot for +1 credit per friend\n\n"
+        "Support: @OSMIUM_9"
     )
-    bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=main_menu())
+    bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu())
+
+# --- FEATURES LIST ---
+@bot.message_handler(func=lambda message: message.text == "✨ Features")
+def features_list(message):
+    text = (
+        "✨ <b>ALL FEATURES</b> ✨\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "🔍 Num Lookup\n"
+        "🧠 TG ID → Num\n"
+        "👤 TG User → Num\n"
+        "📁 Num → All Info\n"
+        "🪪 Aadhaar Info\n"
+        "👥 Aadhaar Family\n"
+        "📧 Email → Num\n"
+        "🌐 Web Scraper\n"
+        "🚗 Vehicle → Num\n"
+        "🏡 Vehicle Address\n"
+        "📄 RC → PDF\n"
+        "🚨 Vehicle Challan\n"
+        "📸 Instagram Info\n"
+        "📝 Name → Random Info\n"
+        "🆔 Aadhaar → Ration\n"
+        "💳 PAN Info\n"
+        "⚪ LPG Info\n"
+        "🚙 Num → Vehicle\n"
+        "🎮 BGMI Info\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "👑 Contact @OSMIUM_9"
+    )
+    bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu())
+
+# --- SHARE BOT ---
+@bot.message_handler(func=lambda message: message.text == "🔗 Share Bot")
+def share_bot(message):
+    bot_info = bot.get_me()
+    link = f"https://t.me/{bot_info.username}"
+    text = (
+        "🔗 <b>Share NERD OSINT</b>\n\n"
+        "Share this bot with your friends and earn credits!\n\n"
+        f"<code>{link}</code>"
+    )
+    bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu())
+
+# --- BUY CREDITS ---
+@bot.message_handler(func=lambda message: message.text == "🛒 Buy Credits")
+def buy_credits(message):
+    if not is_authorized(message.from_user.id):
+        return send_access_denied(message)
+    text = (
+        "🛒 <b>Buy Credits</b>\n\n"
+        "To purchase more credits, please contact the developer directly.\n"
+        "Click the button below to message NERD."
+    )
+    bot.reply_to(message, text, parse_mode='HTML', reply_markup=result_menu())
 
 # --- REFER & EARN ---
 @bot.message_handler(func=lambda message: message.text == "🎁 Refer & Earn")
 def refer_earn(message):
+    if not is_authorized(message.from_user.id):
+        return send_access_denied(message)
     user_id = str(message.from_user.id)
-    if not is_authorized(user_id): return
-    
     bot_info = bot.get_me()
     link = f"https://t.me/{bot_info.username}?start=ref_{user_id}"
     
@@ -134,25 +226,12 @@ def refer_earn(message):
     )
     bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu())
 
-# --- BUY CREDITS ---
-@bot.message_handler(func=lambda message: message.text == "🛒 Buy Credits")
-def buy_credits(message):
-    user_id = str(message.from_user.id)
-    if not is_authorized(user_id): return
-    
-    text = (
-        "💳 <b>Buy Credits</b>\n\n"
-        "To purchase more credits, please contact the developer directly.\n"
-        "Click the button below to message NERD."
-    )
-    bot.reply_to(message, text, parse_mode='HTML', reply_markup=result_menu())
-
 # --- DAILY CLAIM ---
 @bot.message_handler(func=lambda message: message.text == "🎁 Daily Claim")
 def daily_claim(message):
+    if not is_authorized(message.from_user.id):
+        return send_access_denied(message)
     user_id = str(message.from_user.id)
-    if not is_authorized(user_id): return
-    
     if user_id == YOUR_CHAT_ID:
         bot.reply_to(message, "👑 <b>Owner has Unlimited Credits!</b>", parse_mode='HTML', reply_markup=main_menu())
         return
@@ -172,60 +251,54 @@ def daily_claim(message):
         
     USER_DATA[user_id]["credits"] += 10
     USER_DATA[user_id]["last_claim"] = current_time
-    
     bot.reply_to(message, f"🎉 <b>Claim Successful!</b>\nYou got 10 credits. Total: {USER_DATA[user_id]['credits']}", parse_mode='HTML', reply_markup=main_menu())
 
 # --- CHECK CREDITS ---
-@bot.message_handler(func=lambda message: message.text == "🪙 Check Credits")
+@bot.message_handler(func=lambda message: message.text == "📊 My Credits")
 def check_credits(message):
-    user_id = str(message.from_user.id)
-    if not is_authorized(user_id): return
-    credits = get_user_credits(user_id)
+    if not is_authorized(message.from_user.id):
+        return send_access_denied(message)
+    credits = get_user_credits(message.from_user.id)
     bot.reply_to(message, f"💳 <b>Your Balance:</b> {credits}\n\nContact NERD to buy more credits.", parse_mode='HTML', reply_markup=main_menu())
 
 # --- WORKING API PROMPTS ---
-@bot.message_handler(func=lambda message: message.text == "📱 Indian Number")
+# Mapping "🔍 Num Lookup" to Indian Number API
+@bot.message_handler(func=lambda message: message.text in ["🔍 Num Lookup", "📁 Num → All Info"])
 def prompt_mobile(message):
-    if not is_authorized(message.from_user.id): return
+    if not is_authorized(message.from_user.id):
+        return send_access_denied(message)
     msg = bot.reply_to(message, "📱 <b>Enter a 10-digit Mobile Number to search:</b>", parse_mode='HTML', reply_markup=main_menu())
     bot.register_next_step_handler(msg, process_search, "MOBILE")
 
-@bot.message_handler(func=lambda message: message.text == "🆔 Aadhaar Info")
+# Mapping "🪪 Aadhaar Info" to Aadhaar API
+@bot.message_handler(func=lambda message: message.text == "🪪 Aadhaar Info")
 def prompt_aadhaar(message):
-    if not is_authorized(message.from_user.id): return
+    if not is_authorized(message.from_user.id):
+        return send_access_denied(message)
     msg = bot.reply_to(message, "🆔 <b>Enter a 12-digit Aadhaar Number to search:</b>", parse_mode='HTML', reply_markup=main_menu())
     bot.register_next_step_handler(msg, process_search, "AADHAAR")
 
-# --- "COMING SOON" ---
-@bot.message_handler(func=lambda message: message.text in ["☎️ Truecaller", "📍 Tracker", "🚗 Vehicle", "🏦 IFSC", "📲 IMEI", "🌐 IP", "📍 Pincode", "🏢 GST", "📸 Instagram", "✈️ TG to Number", "💳 PAN Lookup", "🔗 PAN GST", "🇵🇰 Pakistan Number", "✉️ SMS", "🚨 Chalan", "💳 UPI", "👨‍👩‍👧 Family", "🔍 Name Search", "🚗➡️📱 Vehicle to Num", "💰 Fampay"])
+# --- "COMING SOON" HANDLER (Rest of the buttons) ---
+@bot.message_handler(func=lambda message: message.text in [
+    "🧠 TG ID → Num", "👤 TG User → Num", "👥 Aadhaar Family", "📧 Email → Num", 
+    "🌐 Web Scraper", "🚗 Vehicle → Num", "🏡 Vehicle Address", "📄 RC → PDF", 
+    "🚨 Vehicle Challan", "📸 Instagram Info", "📝 Name → Random Info", 
+    "🆔 Aadhaar → Ration", "💳 PAN Info", "⚪ LPG Info", "🚙 Num → Vehicle", "🎮 BGMI Info"
+])
 def coming_soon(message):
-    if not is_authorized(message.from_user.id): return
+    if not is_authorized(message.from_user.id):
+        return send_access_denied(message)
     bot.reply_to(message, "⚠️ <b>Soon this service will start.</b>\nStay tuned for the next update by NERD.", parse_mode='HTML', reply_markup=main_menu())
-
-# --- HISTORY COMMAND (OWNER ONLY) ---
-@bot.message_handler(commands=['history'])
-def owner_history(message):
-    if str(message.from_user.id) != YOUR_CHAT_ID: return
-    
-    if not SEARCH_HISTORY:
-        bot.reply_to(message, "No searches yet.")
-        return
-        
-    text = "📊 <b>USER SEARCH HISTORY</b>\n━━━━━━━━━━━━━━━━━━━━━━\n"
-    for uid, queries in SEARCH_HISTORY.items():
-        text += f"👤 <b>User:</b> <code>{uid}</code>\n"
-        text += f"🔍 <b>Queries:</b> {', '.join(queries[-5:])} (Last 5)\n"
-        text += f"📈 <b>Total:</b> {len(queries)}\n\n"
-    bot.reply_to(message, text, parse_mode='HTML')
 
 # --- MAIN SEARCH FUNCTION ---
 def process_search(message, query_type, direct_query=None):
     user_id = str(message.from_user.id)
-    if not is_authorized(user_id): return
+    if not is_authorized(user_id):
+        return send_access_denied(message)
 
     query = direct_query if direct_query else message.text.strip()
     
-    if query in ["📱 Indian Number", "🆔 Aadhaar Info"]:
+    if query in ["🔍 Num Lookup", "📁 Num → All Info", "🪪 Aadhaar Info"]:
         bot.send_message(message.chat.id, "Please enter the number.", reply_markup=main_menu())
         return
         
@@ -240,11 +313,9 @@ def process_search(message, query_type, direct_query=None):
     if user_id != YOUR_CHAT_ID:
         if user_id not in USER_DATA:
             USER_DATA[user_id] = {"credits": 5, "last_claim": 0}
-            
         if USER_DATA[user_id]["credits"] < 1:
             bot.reply_to(message, "❌ <b>You need 1 credit for this.</b>\nUse Daily Claim or Contact NERD.", parse_mode='HTML', reply_markup=main_menu())
             return
-            
         USER_DATA[user_id]["credits"] -= 1
 
     # 🔥 SAVE TO HISTORY
@@ -285,7 +356,6 @@ def process_search(message, query_type, direct_query=None):
 
         curr_cred = "Unlimited" if user_id == YOUR_CHAT_ID else USER_DATA[user_id]["credits"]
 
-        # 👇 Yahan Report ke niche Warning add ki gayi hai 👇
         report = (
             "<pre>"
             "NERD PRIVATE OSINT REPORT\n\n"
@@ -319,19 +389,18 @@ def process_search(message, query_type, direct_query=None):
 @bot.message_handler(func=lambda message: True)
 def invalid_input(message):
     if not is_authorized(message.from_user.id): 
-        bot.reply_to(message, "🚫 ACCESS DENIED.", reply_markup=result_menu())
-        return
+        return send_access_denied(message)
     bot.reply_to(message, "❌ Please use the menu below.", reply_markup=main_menu())
 
 # --- WEB SERVER ---
 app = Flask(__name__)
 @app.route('/')
-def home(): return "NERD PRIVATE OSINT Bot is running!"
+def home(): return "NERD PRIVATE OSINT Premium Bot is running!"
 def run_web():
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
 if __name__ == "__main__":
     threading.Thread(target=run_web).start()
-    print("🤖 NERD PRIVATE OSINT is running...")
+    print("🤖 NERD PRIVATE OSINT Premium is running...")
     bot.polling(none_stop=True)
