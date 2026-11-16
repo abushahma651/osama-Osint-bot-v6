@@ -25,7 +25,6 @@ ALLOWED_USERS = [
     "5704555109", "901112667", "8659201578"
 ]
 
-# Updated Button Texts (Clear LIVE / SOON status)
 BTN_NUM = "✅ [LIVE] 📱 NUM LOOKUP"
 BTN_AADHAAR = "✅ [LIVE] 🆔 AADHAAR INFO"
 
@@ -58,15 +57,9 @@ def get_user_credits(user_id):
 # --- KEYBOARDS ---
 def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    
-    # Top Priority (ACTIVE APIs)
     markup.row(BTN_NUM)
     markup.row(BTN_AADHAAR)
-    
-    # Divider for upcoming features
     markup.row("🔹 PREMIUM FEATURES (SOON) 🔹")
-    
-    # Coming Soon Buttons
     markup.row("⏳ [SOON] 🧠 TG ID → Num", "⏳ [SOON] 👤 TG User → Num")
     markup.row("⏳ [SOON] 👥 Aadhaar Family", "⏳ [SOON] 📧 Email → Num")
     markup.row("⏳ [SOON] 🌐 Web Scraper", "⏳ [SOON] 🚗 Vehicle → Num")
@@ -75,12 +68,9 @@ def main_menu():
     markup.row("⏳ [SOON] 📝 Name → Random Info", "⏳ [SOON] 🆔 Aadhaar → Ration")
     markup.row("⏳ [SOON] 💳 PAN Info", "⏳ [SOON] ⚪ LPG Info")
     markup.row("⏳ [SOON] 🚙 Num → Vehicle", "⏳ [SOON] 🎮 BGMI Info")
-    
-    # Info & Account Buttons
     markup.row("✨ Features", "📖 How to Use")
     markup.row("📊 My Credits", "🛒 Buy Credits")
     markup.row("🎁 Daily Claim")
-    
     return markup
 
 def result_menu():
@@ -89,7 +79,6 @@ def result_menu():
     markup.add(btn_dev)
     return markup
 
-# Aesthetic Terminal Line
 LINE = "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦"
 
 # --- ACCESS DENIED ---
@@ -120,7 +109,104 @@ def delete_message_later(chat_id, message_id, delay=60):
     except Exception:
         pass
 
-# --- START COMMAND ---
+# =====================================================================
+# 👑 ADMIN COMMANDS (OWNER ONLY)
+# =====================================================================
+
+@bot.message_handler(commands=['allow'])
+def admin_allow(message):
+    if str(message.from_user.id) != YOUR_CHAT_ID: return
+    try:
+        new_id = message.text.split()[1]
+        if new_id not in ALLOWED_USERS:
+            ALLOWED_USERS.append(new_id)
+            text = f"<pre>✅ ACCESS GRANTED\n{LINE}\nUser ID : {new_id}\nStatus  : VIP MEMBER\n{LINE}</pre>"
+            bot.reply_to(message, text, parse_mode='HTML')
+        else:
+            bot.reply_to(message, "<pre>⚠️ User is already in VIP list.</pre>", parse_mode='HTML')
+    except IndexError:
+        bot.reply_to(message, "<pre>❌ Format: /allow 123456789</pre>", parse_mode='HTML')
+
+@bot.message_handler(commands=['remove'])
+def admin_remove(message):
+    if str(message.from_user.id) != YOUR_CHAT_ID: return
+    try:
+        rem_id = message.text.split()[1]
+        if rem_id in ALLOWED_USERS and rem_id != YOUR_CHAT_ID:
+            ALLOWED_USERS.remove(rem_id)
+            text = f"<pre>✅ ACCESS REVOKED\n{LINE}\nUser ID : {rem_id}\nStatus  : REMOVED\n{LINE}</pre>"
+            bot.reply_to(message, text, parse_mode='HTML')
+        else:
+            bot.reply_to(message, "<pre>⚠️ User not found or cannot remove Owner.</pre>", parse_mode='HTML')
+    except IndexError:
+        bot.reply_to(message, "<pre>❌ Format: /remove 123456789</pre>", parse_mode='HTML')
+
+@bot.message_handler(commands=['list_users'])
+def admin_list(message):
+    if str(message.from_user.id) != YOUR_CHAT_ID: return
+    
+    text = "<pre>👑 VIP ACCESS LIST\n" + LINE + "\n"
+    for i, uid in enumerate(ALLOWED_USERS, 1):
+        role = "(OWNER)" if str(uid) == YOUR_CHAT_ID else ""
+        try:
+            name = bot.get_chat(uid).first_name
+        except:
+            name = "Unknown"
+        text += f"{i}. {name} | {uid} {role}\n"
+    text += LINE + "</pre>"
+    
+    bot.reply_to(message, text, parse_mode='HTML')
+
+# --- UPDATED FULL HISTORY ---
+@bot.message_handler(commands=['history'])
+def admin_history(message):
+    if str(message.from_user.id) != YOUR_CHAT_ID: return
+    
+    if not SEARCH_HISTORY:
+        bot.reply_to(message, "<pre>📊 No search history found.</pre>", parse_mode='HTML')
+        return
+        
+    text = "<pre>📊 FULL SEARCH HISTORY\n" + LINE + "\n"
+    for uid, queries in SEARCH_HISTORY.items():
+        text += f"👤 User ID : {uid}\n"
+        text += f"🔍 Queries : {', '.join(queries)}\n" # Ab saari queries dikhegi
+        text += f"📈 Total   : {len(queries)}\n"
+        text += "------------------------------\n"
+    text += "</pre>"
+    
+    # Agar history bohot lambi ho jaye toh file bhej dein
+    if len(text) > 4000:
+        with open("history.txt", "w") as f:
+            f.write(text)
+        bot.send_document(message.chat.id, open("history.txt", "rb"), caption="Full History File")
+    else:
+        bot.reply_to(message, text, parse_mode='HTML')
+
+# --- BROADCAST SYSTEM ---
+@bot.message_handler(commands=['broadcast'])
+def admin_broadcast(message):
+    if str(message.from_user.id) != YOUR_CHAT_ID: return
+    
+    msg_text = message.text.replace("/broadcast", "").strip()
+    if not msg_text:
+        bot.reply_to(message, "<pre>❌ Usage: /broadcast Your message here</pre>", parse_mode='HTML')
+        return
+        
+    success_count = 0
+    for uid in ALLOWED_USERS:
+        try:
+            broadcast_format = f"<pre>📢 ADMIN BROADCAST\n{LINE}\n{msg_text}\n{LINE}</pre>"
+            bot.send_message(uid, broadcast_format, parse_mode='HTML')
+            success_count += 1
+        except Exception:
+            pass # Agar user ne bot block kar diya ho
+            
+    bot.reply_to(message, f"<pre>✅ Broadcast sent successfully to {success_count} users.</pre>", parse_mode='HTML')
+
+# =====================================================================
+# 🤖 PUBLIC COMMANDS
+# =====================================================================
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = str(message.from_user.id)
@@ -142,10 +228,8 @@ def send_welcome(message):
         f"{LINE}\n"
         "✨ WHAT CAN THIS BOT DO?\n"
         "🔍 OSINT INTELLIGENCE\n"
-        "🌐 Open Source Intelligence\n"
         "📱 Number • Username • Domain\n"
         "📊 Data Discovery • Verification\n"
-        "⚡ Fast • Smart • Reliable\n"
         f"{LINE}\n"
         "🚧 NOTE: ONLY 2 APIs ARE ACTIVE.\n"
         "✅ [LIVE] Indian Number & Aadhaar Info.\n"
@@ -153,15 +237,11 @@ def send_welcome(message):
         f"{LINE}\n"
         "🔒 VIP Access required for searching.\n"
         "👑 OWNER — @OSMIUM_9\n"
-        "🛡 Privacy • Responsible OSINT\n"
-        "⚠️ Only for lawful research & verified use.\n"
         f"{LINE}"
         "</pre>"
     )
-
     bot.send_photo(message.chat.id, image_url, caption=profile_text, parse_mode='HTML', reply_markup=main_menu())
 
-# --- HOW TO USE ---
 @bot.message_handler(func=lambda message: message.text == "📖 How to Use")
 def how_to_use(message):
     text = (
@@ -179,7 +259,6 @@ def how_to_use(message):
     )
     bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu())
 
-# --- FEATURES LIST ---
 @bot.message_handler(func=lambda message: message.text == "✨ Features")
 def features_list(message):
     text = (
@@ -189,28 +268,15 @@ def features_list(message):
         "✅ [LIVE] 📱 NUM LOOKUP\n"
         "✅ [LIVE] 🆔 AADHAAR INFO\n"
         "⏳ [SOON] 🧠 TG ID → Num\n"
-        "⏳ [SOON] 👤 TG User → Num\n"
-        "⏳ [SOON] 👥 Aadhaar Family\n"
-        "⏳ [SOON] 📧 Email → Num\n"
-        "⏳ [SOON] 🌐 Web Scraper\n"
         "⏳ [SOON] 🚗 Vehicle → Num\n"
-        "⏳ [SOON] 🏡 Vehicle Address\n"
-        "⏳ [SOON] 📄 RC → PDF\n"
-        "⏳ [SOON] 🚨 Vehicle Challan\n"
-        "⏳ [SOON] 📸 Instagram Info\n"
-        "⏳ [SOON] 📝 Name → Random Info\n"
-        "⏳ [SOON] 🆔 Aadhaar → Ration\n"
         "⏳ [SOON] 💳 PAN Info\n"
-        "⏳ [SOON] ⚪ LPG Info\n"
-        "⏳ [SOON] 🚙 Num → Vehicle\n"
-        "⏳ [SOON] 🎮 BGMI Info\n"
+        "⏳ [SOON] 🆔 Aadhaar → Ration\n"
         f"{LINE}\n"
         "👑 Contact @OSMIUM_9"
         "</pre>"
     )
     bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu())
 
-# --- BUY CREDITS ---
 @bot.message_handler(func=lambda message: message.text == "🛒 Buy Credits")
 def buy_credits(message):
     if not is_authorized(message.from_user.id):
@@ -220,16 +286,13 @@ def buy_credits(message):
         "🛒 BUY CREDITS\n"
         f"{LINE}\n"
         "Status : AVAILABLE\n"
-        "Method : Manual Contact\n\n"
-        "To purchase more credits, please contact\n"
-        "the developer directly.\n"
+        "Method : Manual Contact\n"
         f"{LINE}\n"
         "👉 Click the button below to message NERD."
         "</pre>"
     )
     bot.reply_to(message, text, parse_mode='HTML', reply_markup=result_menu())
 
-# --- DAILY CLAIM ---
 @bot.message_handler(func=lambda message: message.text == "🎁 Daily Claim")
 def daily_claim(message):
     if not is_authorized(message.from_user.id):
@@ -254,7 +317,6 @@ def daily_claim(message):
             "<pre>"
             "⏳ CLAIM BLOCKED\n"
             f"{LINE}\n"
-            "You have already claimed today.\n"
             f"TIME LEFT : {hours}h {minutes}m\n"
             f"{LINE}"
             "</pre>"
@@ -275,7 +337,6 @@ def daily_claim(message):
     )
     bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu())
 
-# --- CHECK CREDITS ---
 @bot.message_handler(func=lambda message: message.text == "📊 My Credits")
 def check_credits(message):
     if not is_authorized(message.from_user.id):
@@ -288,23 +349,15 @@ def check_credits(message):
         f"USER ID : {message.from_user.id}\n"
         f"CREDITS : {credits}\n"
         f"{LINE}\n"
-        "Contact NERD to buy more."
         "</pre>"
     )
     bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu())
 
-# --- WORKING API PROMPTS ---
 @bot.message_handler(func=lambda message: message.text == BTN_NUM)
 def prompt_mobile(message):
     if not is_authorized(message.from_user.id):
         return send_access_denied(message)
-    text = (
-        "<pre>"
-        "📱 MOBILE SEARCH INITIATED\n"
-        f"{LINE}\n"
-        "Please type a 10-digit Mobile Number below:"
-        "</pre>"
-    )
+    text = f"<pre>📱 MOBILE SEARCH INITIATED\n{LINE}\nType a 10-digit Mobile Number:</pre>"
     msg = bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu())
     bot.register_next_step_handler(msg, process_search, "MOBILE")
 
@@ -312,34 +365,16 @@ def prompt_mobile(message):
 def prompt_aadhaar(message):
     if not is_authorized(message.from_user.id):
         return send_access_denied(message)
-    text = (
-        "<pre>"
-        "🆔 AADHAAR SEARCH INITIATED\n"
-        f"{LINE}\n"
-        "Please type a 12-digit Aadhaar Number below:"
-        "</pre>"
-    )
+    text = f"<pre>🆔 AADHAAR SEARCH INITIATED\n{LINE}\nType a 12-digit Aadhaar Number:</pre>"
     msg = bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu())
     bot.register_next_step_handler(msg, process_search, "AADHAAR")
 
-# --- "COMING SOON" HANDLER ---
 @bot.message_handler(func=lambda message: message.text.startswith("⏳"))
 def coming_soon(message):
     if not is_authorized(message.from_user.id):
         return send_access_denied(message)
-        
     feature_name = message.text.replace("⏳ [SOON]", "").strip()
-    text = (
-        "<pre>"
-        "⚠️ SYSTEM UPDATE IN PROGRESS\n"
-        f"{LINE}\n"
-        f"FEATURE : {feature_name}\n"
-        "STATUS  : PENDING DEPLOYMENT\n"
-        "ETA     : SOON\n"
-        f"{LINE}\n"
-        "Contact @OSMIUM_9 for early access."
-        "</pre>"
-    )
+    text = f"<pre>⚠️ SERVICE UNAVAILABLE\n{LINE}\nFEATURE : {feature_name}\nSTATUS  : COMING SOON\n{LINE}</pre>"
     bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu())
 
 # --- MAIN SEARCH FUNCTION ---
@@ -363,7 +398,6 @@ def process_search(message, query_type, direct_query=None):
         elif query.startswith("⏳"): coming_soon(message)
         return
         
-    # Validation
     if query_type == "MOBILE" and (not query.isdigit() or len(query) != 10):
         bot.reply_to(message, "<pre>❌ ERROR: Invalid Mobile Number.\nPlease enter exactly 10 digits.</pre>", parse_mode='HTML', reply_markup=main_menu())
         return
@@ -371,7 +405,6 @@ def process_search(message, query_type, direct_query=None):
         bot.reply_to(message, "<pre>❌ ERROR: Invalid Aadhaar Number.\nPlease enter exactly 12 digits.</pre>", parse_mode='HTML', reply_markup=main_menu())
         return
 
-    # 💳 DEDUCT CREDITS
     if user_id != YOUR_CHAT_ID:
         if user_id not in USER_DATA:
             USER_DATA[user_id] = {"credits": 5, "last_claim": 0}
@@ -379,8 +412,28 @@ def process_search(message, query_type, direct_query=None):
             bot.reply_to(message, "<pre>❌ ERROR: INSUFFICIENT CREDITS.\nYou need 1 credit to search.</pre>", parse_mode='HTML', reply_markup=main_menu())
             return
         USER_DATA[user_id]["credits"] -= 1
+        
+        # 🔥 LIVE ADMIN ALERT (NEW FEATURE)
+        try:
+            username = message.from_user.username
+            first_name = message.from_user.first_name
+            log_text = (
+                f"<pre>"
+                f"🚨 NEW SEARCH DETECTED 🚨\n"
+                f"{LINE}\n"
+                f"👤 NAME     : {first_name}\n"
+                f"🔗 USERNAME : @{username if username else 'None'}\n"
+                f"🆔 USER ID  : {user_id}\n"
+                f"📊 TYPE     : {query_type}\n"
+                f"🔍 QUERY    : {query}\n"
+                f"{LINE}\n"
+                f"💳 CREDITS LEFT: {USER_DATA[user_id]['credits']}"
+                f"</pre>"
+            )
+            bot.send_message(YOUR_CHAT_ID, log_text, parse_mode='HTML')
+        except Exception:
+            pass
 
-    # 🔥 SAVE HISTORY
     if user_id not in SEARCH_HISTORY:
         SEARCH_HISTORY[user_id] = []
     SEARCH_HISTORY[user_id].append(query)
@@ -436,7 +489,6 @@ def process_search(message, query_type, direct_query=None):
             "BY          : @OSMIUM_9\n"
             f"{LINE}\n"
             "⚠️ THIS REPORT WILL DELETE IN 60 SECONDS.\n"
-            "SAVE THIS DATA.\n"
             "</pre>"
         )
         
@@ -450,7 +502,6 @@ def process_search(message, query_type, direct_query=None):
         )
         threading.Thread(target=delete_message_later, args=(message.chat.id, sent_msg.message_id, 60)).start()
 
-# --- INVALID INPUT HANDLER ---
 @bot.message_handler(func=lambda message: True)
 def invalid_input(message):
     if not is_authorized(message.from_user.id): 
@@ -462,10 +513,4 @@ app = Flask(__name__)
 @app.route('/')
 def home(): return "NERD PRIVATE OSINT Bot is running!"
 def run_web():
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
-
-if __name__ == "__main__":
-    threading.Thread(target=run_web).start()
-    print("🤖 NERD PRIVATE OSINT is running...")
-    bot.polling(none_stop=True)
+    port = int(os.environ.
