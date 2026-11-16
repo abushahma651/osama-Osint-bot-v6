@@ -361,4 +361,4 @@ def process_search(message, query_type, direct_query=None):
         mobile = record.get('mobile', query if query_type == "MOBILE" else 'N/A')
         alt = record.get('alt', 'None')
         if alt == 'None' or not alt: alt = 'N/A'
-        aadhaar = record.get('id', q
+        aadhaar = record.get('id', query if query_type == "AADHAAR" else 'N/A')
