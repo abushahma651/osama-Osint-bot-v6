@@ -65,13 +65,11 @@ def main_menu(user_id):
     markup.row("📊 My Credits", "🛒 Buy Credits")
     markup.row("🎁 Daily Claim")
     
-    # 👑 ADMIN PANEL BUTTON (Only for Owner)
     if str(user_id) == YOUR_CHAT_ID:
         markup.row("👑 ADMIN PANEL")
         
     return markup
 
-# Admin Panel Inline Keyboard
 def admin_panel_menu():
     markup = types.InlineKeyboardMarkup(row_width=2)
     btn_list = types.InlineKeyboardButton("📋 List Users", callback_data="adm_list")
@@ -97,7 +95,6 @@ def result_menu():
 
 LINE = "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦"
 
-# --- ACCESS DENIED ---
 def send_access_denied(message):
     text = (
         "<pre>"
@@ -117,7 +114,6 @@ def send_access_denied(message):
     )
     bot.reply_to(message, text, parse_mode='HTML', reply_markup=result_menu())
 
-# --- AUTO DELETE ---
 def delete_message_later(chat_id, message_id, delay=60):
     time.sleep(delay)
     try:
@@ -454,5 +450,9 @@ def process_search(message, query_type, direct_query=None):
     if query_type == "MOBILE" and (not query.isdigit() or len(query) != 10):
         bot.reply_to(message, "<pre>❌ ERROR: Invalid Mobile Number.\nPlease enter exactly 10 digits.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
         return
+    
     if query_type == "AADHAAR" and (not query.isdigit() or len(query) != 12):
-        bot.reply_to(message, "<pre>❌ ERROR: Invalid Aadhaar Number.\nPlease enter exact
+        bot.reply_to(message, "<pre>❌ ERROR: Invalid Aadhaar Number.\nPlease enter exactly 12 digits.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
+        return
+
+    if user_id != YOUR_CHA
