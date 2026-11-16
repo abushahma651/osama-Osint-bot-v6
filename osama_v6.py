@@ -35,10 +35,19 @@ PROTECTED_NUMBERS = ["9621303160", "7991536322", "8604302624", "6204473620"]
 def is_authorized(user_id):
     return str(user_id) in ALLOWED_USERS or str(user_id) == YOUR_CHAT_ID
 
-# --- MENU (CONTACT DEVELOPER BUTTON) ---
-def get_menu():
+# --- MAIN MENU (Niche wale buttons) ---
+def get_main_menu():
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    btn_mobile = types.KeyboardButton("📱 Mobile Search")
+    btn_aadhaar = types.KeyboardButton("🆔 Aadhaar Search")
+    markup.add(btn_mobile, btn_aadhaar)
+    return markup
+
+# --- RESULT MENU (Contact Button) ---
+def get_result_menu():
     markup = types.InlineKeyboardMarkup(row_width=1)
-    btn_dev = types.InlineKeyboardButton("👨‍💻 Contact Developer (Osama)", url=f"tg://user?id={YOUR_CHAT_ID}")
+    # Button ka naam NERD
+    btn_dev = types.InlineKeyboardButton("👨‍💻 Contact Developer (NERD)", url=f"tg://user?id={YOUR_CHAT_ID}")
     markup.add(btn_dev)
     return markup
 
@@ -53,26 +62,37 @@ def send_welcome(message):
             "🚫 <b>ACCESS DENIED</b>\n\n"
             "You do not have the required clearance to access this system.\n\n"
             "🔒 <i>This bot is restricted to authorized personnel only.</i>\n"
-            "👉 <b>To request access, please contact Osama via the button below.</b>", 
-            parse_mode='HTML', 
-            reply_markup=get_menu()
+            "👉 <b>To request access, please contact NERD.</b>", 
+            parse_mode='HTML'
         )
         return
 
     text = (
-        "🟢 <b>OSAMA OSINT ENGINE v8.0</b>\n"
+        "🟢 <b>NERD OSINT ENGINE v8.0</b>\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "Send me any <b>10-digit Mobile Number</b> or <b>12-digit Aadhaar Number</b>, and I will provide you with all the details.\n\n"
+        "Welcome to NERD OSINT.\n"
+        "Please select an option from the menu below to proceed with your search.\n\n"
         "⚠️ <i>All queries are logged. Use strictly for educational purposes.</i>"
     )
-    bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=get_menu())
+    bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=get_main_menu())
+
+# --- MENU BUTTON HANDLERS ---
+@bot.message_handler(func=lambda message: message.text == "📱 Mobile Search")
+def prompt_mobile(message):
+    if not is_authorized(message.from_user.id): return
+    msg = bot.reply_to(message, "📱 <b>Enter a 10-digit Mobile Number to search:</b>", parse_mode='HTML')
+    bot.register_next_step_handler(msg, process_search, "MOBILE")
+
+@bot.message_handler(func=lambda message: message.text == "🆔 Aadhaar Search")
+def prompt_aadhaar(message):
+    if not is_authorized(message.from_user.id): return
+    msg = bot.reply_to(message, "🆔 <b>Enter a 12-digit Aadhaar Number to search:</b>", parse_mode='HTML')
+    bot.register_next_step_handler(msg, process_search, "AADHAAR")
 
 # --- ADMIN COMMANDS (ADD/REMOVE/LIST USERS) ---
 @bot.message_handler(commands=['allow'])
 def allow_user(message):
-    if str(message.from_user.id) != YOUR_CHAT_ID:
-        return 
-        
+    if str(message.from_user.id) != YOUR_CHAT_ID: return 
     try:
         new_id = message.text.split()[1]
         if new_id not in ALLOWED_USERS:
@@ -85,9 +105,7 @@ def allow_user(message):
 
 @bot.message_handler(commands=['remove'])
 def remove_user(message):
-    if str(message.from_user.id) != YOUR_CHAT_ID:
-        return
-        
+    if str(message.from_user.id) != YOUR_CHAT_ID: return
     try:
         remove_id = message.text.split()[1]
         if remove_id in ALLOWED_USERS and remove_id != YOUR_CHAT_ID:
@@ -100,59 +118,50 @@ def remove_user(message):
 
 @bot.message_handler(commands=['list_users', 'users'])
 def list_allowed_users(message):
-    if str(message.from_user.id) != YOUR_CHAT_ID:
-        return
-        
-    response = "👑 <b>VIP ACCESS LIST</b> 👑\n"
-    response += "━━━━━━━━━━━━━━━━━━━━━━\n"
-    response += "<i>Fetching names from Telegram...</i>\n\n"
-    
+    if str(message.from_user.id) != YOUR_CHAT_ID: return
+    response = "👑 <b>VIP ACCESS LIST</b> 👑\n━━━━━━━━━━━━━━━━━━━━━━\n<i>Fetching names from Telegram...</i>\n\n"
     msg = bot.reply_to(message, response, parse_mode='HTML')
     
-    final_response = "👑 <b>VIP ACCESS LIST</b> 👑\n"
-    final_response += "━━━━━━━━━━━━━━━━━━━━━━\n"
-    
+    final_response = "👑 <b>VIP ACCESS LIST</b> 👑\n━━━━━━━━━━━━━━━━━━━━━━\n"
     for i, user_id in enumerate(ALLOWED_USERS, 1):
         role = " (👑 Owner)" if str(user_id) == YOUR_CHAT_ID else ""
-        
         try:
             chat_info = bot.get_chat(user_id)
             user_name = chat_info.first_name
-            if chat_info.last_name:
-                user_name += f" {chat_info.last_name}"
+            if chat_info.last_name: user_name += f" {chat_info.last_name}"
         except Exception:
             user_name = "Unknown (Not started bot)"
-            
-        final_response += f"{i}. <b>{user_name}</b>\n"
-        final_response += f"    🆔 <code>{user_id}</code>{role}\n"
-            
-    final_response += "━━━━━━━━━━━━━━━━━━━━━━\n"
-    final_response += f"<b>Total Authorized Users:</b> {len(ALLOWED_USERS)}"
-    
+        final_response += f"{i}. <b>{user_name}</b>\n    🆔 <code>{user_id}</code>{role}\n"
+    final_response += f"━━━━━━━━━━━━━━━━━━━━━━\n<b>Total Authorized Users:</b> {len(ALLOWED_USERS)}"
     bot.edit_message_text(final_response, message.chat.id, msg.message_id, parse_mode='HTML')
 
 
-# --- SCANNER HANDLER ---
+# --- SCANNER HANDLER (Direct number detect karne ke liye fallback) ---
 @bot.message_handler(func=lambda message: message.text.isdigit() and len(message.text) in [10, 12])
-def handle_scan(message):
+def handle_direct_input(message):
+    # Agar user menu use nahi karta aur direct number dalkar bhejta hai
+    query_type = "MOBILE" if len(message.text) == 10 else "AADHAAR"
+    process_search(message, query_type, direct_query=message.text)
+
+
+# --- MAIN SEARCH FUNCTION ---
+def process_search(message, query_type, direct_query=None):
     user_id = message.from_user.id
+    if not is_authorized(user_id): return
+
+    # Agar direct_query hai (message.text se), warna next_step_handler se aaya hai
+    query = direct_query if direct_query else message.text.strip()
     
-    if not is_authorized(user_id):
-        bot.reply_to(
-            message, 
-            "🚫 <b>ACCESS DENIED</b>\n\n"
-            "Your identity is not recognized.\n"
-            "👉 <b>Contact Osama to get VIP access and use this bot.</b>", 
-            parse_mode='HTML', 
-            reply_markup=get_menu()
-        )
+    # Validation
+    if query_type == "MOBILE" and (not query.isdigit() or len(query) != 10):
+        bot.reply_to(message, "❌ Invalid mobile number. Please enter exactly 10 digits.")
+        return
+    if query_type == "AADHAAR" and (not query.isdigit() or len(query) != 12):
+        bot.reply_to(message, "❌ Invalid Aadhaar number. Please enter exactly 12 digits.")
         return
 
-    query = message.text
     username = message.from_user.username
     first_name = message.from_user.first_name
-    
-    query_type = "MOBILE" if len(query) == 10 else "AADHAAR"
 
     # 🔥 ADMIN LOGGING SYSTEM
     if str(user_id) != YOUR_CHAT_ID:
@@ -174,7 +183,7 @@ def handle_scan(message):
         bot.reply_to(
             message, 
             "🚫 <b>ACCESS DENIED</b>\n\n"
-            "This identity is protected under the <b>OSAMA OSINT SECURITY PROTOCOL</b>. Unauthorized tracing is strictly prohibited.", 
+            "This identity is protected under the <b>NERD OSINT SECURITY PROTOCOL</b>. Unauthorized tracing is strictly prohibited.", 
             parse_mode='HTML'
         )
         return
@@ -206,8 +215,8 @@ def handle_scan(message):
             if data.get('status') == 'success' and 'data' in data:
                 records = data['data']
     except Exception as e:
-        print(f"API Error: {e}")  # <--- YAHAN SPACE (INDENTATION) BILKUL SAHI HAI
-        
+        print(f"API Error: {e}") 
+            
     if records:
         record = records[0]
         
@@ -224,9 +233,10 @@ def handle_scan(message):
         address = record.get('address', 'N/A')
         clean_address = address.replace('!', ', ').strip(', ') if address != 'N/A' else 'N/A'
 
+        # 🛠️ YAHAN BY : @OSMIUM_9 WAPAS KAR DIYA HAI
         report = (
             "<pre>"
-            "OSINT LOOKUP REPORT\n\n"
+            "NERD OSINT REPORT\n\n"
             "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦\n"
             f"👤 Query        : {query}\n"
             f"📊 Type         : {query_type}\n"
@@ -247,7 +257,8 @@ def handle_scan(message):
             "</pre>"
         )
         
-        bot.edit_message_text(report, message.chat.id, msg.message_id, parse_mode='HTML', reply_markup=get_menu())
+        # Data milne ke baad Contact Developer (NERD) button aayega
+        bot.edit_message_text(report, message.chat.id, msg.message_id, parse_mode='HTML', reply_markup=get_result_menu())
         
     else:
         bot.edit_message_text(
@@ -255,29 +266,24 @@ def handle_scan(message):
             chat_id=message.chat.id,
             message_id=msg.message_id,
             parse_mode='HTML',
-            reply_markup=get_menu()
+            reply_markup=get_result_menu()
         )
+
 
 # --- INVALID INPUT HANDLER ---
 @bot.message_handler(func=lambda message: True)
 def invalid_input(message):
     if not is_authorized(message.from_user.id):
-        bot.reply_to(
-            message, 
-            "🚫 <b>ACCESS DENIED</b>\n\n"
-            "You do not have permission to use this bot.", 
-            parse_mode='HTML',
-            reply_markup=get_menu()
-        )
+        bot.reply_to(message, "🚫 <b>ACCESS DENIED</b>", parse_mode='HTML')
         return
-    bot.reply_to(message, "❌ <b>ERROR:</b> Invalid format. Please send a valid 10-digit Mobile or 12-digit Aadhaar.", parse_mode='HTML')
+    bot.reply_to(message, "❌ <b>ERROR:</b> Invalid format. Please select an option from the menu or send a valid 10/12 digit number.", parse_mode='HTML', reply_markup=get_main_menu())
 
 # --- DUMMY WEB SERVER (Render ke liye) ---
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Osama OSINT Bot (VIP Mode) is running successfully!"
+    return "NERD OSINT Bot is running successfully!"
 
 def run_web():
     port = int(os.environ.get("PORT", 8080))
@@ -285,5 +291,5 @@ def run_web():
 
 if __name__ == "__main__":
     threading.Thread(target=run_web).start()
-    print("🤖 Osama Elite Bot (VIP Mode) is running...")
+    print("🤖 NERD Elite Bot is running...")
     bot.polling(none_stop=True)
