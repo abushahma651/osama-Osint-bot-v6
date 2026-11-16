@@ -4,7 +4,6 @@ import os
 import telebot
 import requests
 import time
-import json
 import random
 import string
 from telebot import types
@@ -16,7 +15,6 @@ API_BASE_URL = "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkAp
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# --- DATABASE ---
 USER_DATA = {} 
 SEARCH_HISTORY = {} 
 REDEEM_CODES = {} 
@@ -30,6 +28,7 @@ ALLOWED_USERS = [
 
 BTN_NUM = "✅ [LIVE] 📱 NUM LOOKUP"
 BTN_AADHAAR = "✅ [LIVE] 🆔 AADHAAR INFO"
+LINE = "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦"
 
 def is_authorized(user_id):
     return str(user_id) in ALLOWED_USERS
@@ -43,15 +42,15 @@ def get_user_credits(user_id):
     return USER_DATA[user_id]["credits"]
 
 def generate_code(length=8):
-    characters = string.ascii_uppercase + string.digits
-    return ''.join(random.choice(characters) for i in range(length))
+    return ''.join(random.choice(string.ascii_uppercase + string.digits) for i in range(length))
 
 # --- KEYBOARDS ---
 def main_menu(user_id):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row(BTN_NUM)
-    markup.row(BTN_AADHAAR)
-    markup.row("🎟️ Redeem Code")
+    markup.row(BTN_NUM, BTN_AADHAAR)
+    markup.row("🎟️ Redeem Code", "📖 How to Use")
+    markup.row("📊 My Credits", "🛒 Buy Credits")
+    markup.row("🎁 Daily Claim", "✨ Features")
     markup.row("🔹 PREMIUM FEATURES (SOON) 🔹")
     markup.row("⏳ [SOON] 🧠 TG ID → Num", "⏳ [SOON] 👤 TG User → Num")
     markup.row("⏳ [SOON] 👥 Aadhaar Family", "⏳ [SOON] 📧 Email → Num")
@@ -61,9 +60,6 @@ def main_menu(user_id):
     markup.row("⏳ [SOON] 📝 Name → Random Info", "⏳ [SOON] 🆔 Aadhaar → Ration")
     markup.row("⏳ [SOON] 💳 PAN Info", "⏳ [SOON] ⚪ LPG Info")
     markup.row("⏳ [SOON] 🚙 Num → Vehicle", "⏳ [SOON] 🎮 BGMI Info")
-    markup.row("✨ Features", "📖 How to Use")
-    markup.row("📊 My Credits", "🛒 Buy Credits")
-    markup.row("🎁 Daily Claim")
     
     if str(user_id) == YOUR_CHAT_ID:
         markup.row("👑 ADMIN PANEL")
@@ -72,46 +68,26 @@ def main_menu(user_id):
 
 def admin_panel_menu():
     markup = types.InlineKeyboardMarkup(row_width=2)
-    btn_list = types.InlineKeyboardButton("📋 List Users", callback_data="adm_list")
-    btn_history = types.InlineKeyboardButton("📊 History", callback_data="adm_history")
-    btn_broadcast = types.InlineKeyboardButton("📢 Broadcast", callback_data="adm_broadcast")
-    btn_addcredit = types.InlineKeyboardButton("➕ Add Credits", callback_data="adm_addcredit")
-    btn_gencode = types.InlineKeyboardButton("🎟️ Gen Code", callback_data="adm_gencode")
-    btn_allow = types.InlineKeyboardButton("✅ Allow User", callback_data="adm_allow")
-    btn_remove = types.InlineKeyboardButton("❌ Remove User", callback_data="adm_remove")
-    btn_close = types.InlineKeyboardButton("🔙 Close Panel", callback_data="adm_close")
-    
-    markup.add(btn_list, btn_history)
-    markup.add(btn_broadcast, btn_addcredit)
-    markup.add(btn_gencode, btn_allow)
-    markup.add(btn_remove, btn_close)
+    markup.add(
+        types.InlineKeyboardButton("📋 List Users", callback_data="adm_list"),
+        types.InlineKeyboardButton("📊 History", callback_data="adm_history"),
+        types.InlineKeyboardButton("📢 Broadcast", callback_data="adm_broadcast"),
+        types.InlineKeyboardButton("➕ Add Credits", callback_data="adm_addcredit"),
+        types.InlineKeyboardButton("🎟️ Gen Code", callback_data="adm_gencode"),
+        types.InlineKeyboardButton("✅ Allow User", callback_data="adm_allow"),
+        types.InlineKeyboardButton("❌ Remove User", callback_data="adm_remove"),
+        types.InlineKeyboardButton("🔙 Close Panel", callback_data="adm_close")
+    )
     return markup
 
 def result_menu():
-    markup = types.InlineKeyboardMarkup(row_width=1)
+    markup = types.InlineKeyboardMarkup()
     btn_dev = types.InlineKeyboardButton("👨‍💻 Contact Developer (NERD)", url=f"tg://user?id={YOUR_CHAT_ID}")
     markup.add(btn_dev)
     return markup
 
-LINE = "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦"
-
 def send_access_denied(message):
-    text = (
-        "<pre>"
-        f"{LINE}\n"
-        "❌ ACCESS DENIED\n"
-        f"{LINE}\n"
-        "STATUS  : RESTRICTED\n"
-        "REASON  : INSUFFICIENT CLEARANCE\n"
-        "CREDITS : 0\n\n"
-        "This is a private NERD OSINT tool.\n"
-        "You don't have permission to use it.\n"
-        f"{LINE}\n"
-        "👉 To get VIP access and credits,\n"
-        "contact NERD via the button below.\n"
-        f"{LINE}"
-        "</pre>"
-    )
+    text = f"<pre>{LINE}\n❌ ACCESS DENIED\n{LINE}\nSTATUS  : RESTRICTED\nREASON  : INSUFFICIENT CLEARANCE\n\nThis is a private NERD OSINT tool.\nYou don't have permission to use it.\n{LINE}\n👉 To get VIP access, contact NERD.\n{LINE}</pre>"
     bot.reply_to(message, text, parse_mode='HTML', reply_markup=result_menu())
 
 def delete_message_later(chat_id, message_id, delay=60):
@@ -138,65 +114,50 @@ def admin_callbacks(call):
     if action == "close":
         bot.delete_message(call.message.chat.id, call.message.message_id)
         bot.send_message(call.message.chat.id, "<pre>Admin Panel Closed.</pre>", parse_mode='HTML', reply_markup=main_menu(call.from_user.id))
-        
     elif action == "list":
         text = "<pre>👑 VIP ACCESS LIST\n" + LINE + "\n"
         for i, uid in enumerate(ALLOWED_USERS, 1):
             role = "(OWNER)" if str(uid) == YOUR_CHAT_ID else ""
-            try:
-                name = bot.get_chat(uid).first_name
-            except:
-                name = "Unknown"
+            try: name = bot.get_chat(uid).first_name
+            except: name = "Unknown"
             text += f"{i}. {name} | {uid} {role}\n"
         text += LINE + "</pre>"
         bot.send_message(call.message.chat.id, text, parse_mode='HTML')
-        
     elif action == "history":
         if not SEARCH_HISTORY:
             bot.send_message(call.message.chat.id, "<pre>📊 No search history found.</pre>", parse_mode='HTML')
             return
         text = "<pre>📊 FULL SEARCH HISTORY\n" + LINE + "\n"
         for uid, queries in SEARCH_HISTORY.items():
-            text += f"👤 ID : {uid}\n"
-            text += f"🔍 Total : {len(queries)}\n"
-            text += "------------------------------\n"
+            text += f"👤 ID : {uid}\n🔍 Total : {len(queries)}\n{LINE}\n"
         text += "</pre>"
         if len(text) > 4000:
-            with open("history.txt", "w") as f:
-                f.write(text)
+            with open("history.txt", "w") as f: f.write(text)
             bot.send_document(call.message.chat.id, open("history.txt", "rb"))
         else:
             bot.send_message(call.message.chat.id, text, parse_mode='HTML')
-            
     elif action == "broadcast":
         msg = bot.send_message(call.message.chat.id, "<pre>📢 Enter the broadcast message:</pre>", parse_mode='HTML')
         bot.register_next_step_handler(msg, process_broadcast)
-        
     elif action == "addcredit":
         msg = bot.send_message(call.message.chat.id, "<pre>➕ Enter User ID and Amount\nFormat: 123456789 50</pre>", parse_mode='HTML')
         bot.register_next_step_handler(msg, process_addcredit)
-        
     elif action == "gencode":
         msg = bot.send_message(call.message.chat.id, "<pre>🎟️ Enter amount for new code (e.g., 50):</pre>", parse_mode='HTML')
         bot.register_next_step_handler(msg, process_gencode)
-        
     elif action == "allow":
         msg = bot.send_message(call.message.chat.id, "<pre>✅ Enter User ID to allow:</pre>", parse_mode='HTML')
         bot.register_next_step_handler(msg, process_allow)
-        
     elif action == "remove":
         msg = bot.send_message(call.message.chat.id, "<pre>❌ Enter User ID to remove:</pre>", parse_mode='HTML')
         bot.register_next_step_handler(msg, process_remove)
 
-# --- ADMIN PROCESSING FUNCTIONS ---
-
 def process_broadcast(message):
     if str(message.from_user.id) != YOUR_CHAT_ID: return
-    msg_text = message.text
     success = 0
     for uid in ALLOWED_USERS:
         try:
-            bot.send_message(uid, f"<pre>📢 ADMIN BROADCAST\n{LINE}\n{msg_text}\n{LINE}</pre>", parse_mode='HTML')
+            bot.send_message(uid, f"<pre>📢 ADMIN BROADCAST\n{LINE}\n{message.text}\n{LINE}</pre>", parse_mode='HTML')
             success += 1
         except: pass
     bot.reply_to(message, f"<pre>✅ Broadcast sent to {success} users.</pre>", parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
@@ -249,42 +210,15 @@ def process_remove(message):
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     user_id = str(message.from_user.id)
-    first_name = message.from_user.first_name
     credits = get_user_credits(user_id)
-    
     image_url = "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
     
-    profile_text = (
-        "<pre>"
-        "╔══════════════════════════════╗\n"
-        "║      NERD PRIVATE OSINT      ║\n"
-        "╚══════════════════════════════╝\n"
-        "👋 Welcome!\n"
-        f"{LINE}\n"
-        f"👤 NAME    : {first_name}\n"
-        f"🆔 USER ID : {user_id}\n"
-        f"💳 CREDITS : {credits}\n"
-        f"{LINE}\n"
-        "✨ WHAT CAN THIS BOT DO?\n"
-        "🔍 OSINT INTELLIGENCE\n"
-        "📱 Number • Username • Domain\n"
-        "📊 Data Discovery • Verification\n"
-        f"{LINE}\n"
-        "🚧 NOTE: ONLY 2 APIs ARE ACTIVE.\n"
-        "✅ [LIVE] Indian Number & Aadhaar Info.\n"
-        "⏳ [SOON] Other services coming soon!\n"
-        f"{LINE}\n"
-        "🔒 VIP Access required for searching.\n"
-        "👑 OWNER — @OSMIUM_9\n"
-        f"{LINE}"
-        "</pre>"
-    )
+    profile_text = f"<pre>╔══════════════════════════════╗\n║      NERD PRIVATE OSINT      ║\n╚══════════════════════════════╝\n👋 Welcome!\n{LINE}\n👤 NAME    : {message.from_user.first_name}\n🆔 USER ID : {user_id}\n💳 CREDITS : {credits}\n{LINE}\n✨ WHAT CAN THIS BOT DO?\n🔍 OSINT INTELLIGENCE\n📱 Number • Username • Domain\n📊 Data Discovery • Verification\n{LINE}\n🚧 NOTE: ONLY 2 APIs ARE ACTIVE.\n✅ [LIVE] Indian Number & Aadhaar Info.\n⏳ [SOON] Other services coming soon!\n{LINE}\n🔒 VIP Access required for searching.\n👑 OWNER — @OSMIUM_9\n{LINE}</pre>"
     bot.send_photo(message.chat.id, image_url, caption=profile_text, parse_mode='HTML', reply_markup=main_menu(user_id))
 
 @bot.message_handler(commands=['redeem'])
 def redeem_code(message):
-    if not is_authorized(message.from_user.id):
-        return send_access_denied(message)
+    if not is_authorized(message.from_user.id): return send_access_denied(message)
     user_id = str(message.from_user.id)
     try:
         code = message.text.split()[1].upper()
@@ -301,15 +235,13 @@ def redeem_code(message):
 
 @bot.message_handler(func=lambda message: message.text == "🎟️ Redeem Code")
 def prompt_redeem(message):
-    if not is_authorized(message.from_user.id):
-        return send_access_denied(message)
+    if not is_authorized(message.from_user.id): return send_access_denied(message)
     msg = bot.reply_to(message, "<pre>🎟️ ENTER REDEEM CODE\n" + LINE + "\nType your code below:</pre>", parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
     
     def process_redeem(msg):
-        if msg.text.startswith('/') or msg.text in ["👑 ADMIN PANEL"]: 
+        if msg.text.startswith('/') or msg.text == "👑 ADMIN PANEL": 
             bot.clear_step_handler(msg)
             return
-            
         user_id = str(msg.from_user.id)
         code = msg.text.strip().upper()
         if code in REDEEM_CODES:
@@ -322,124 +254,62 @@ def prompt_redeem(message):
             bot.reply_to(msg, "<pre>❌ Invalid or Expired Code.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
     bot.register_next_step_handler(msg, process_redeem)
 
-@bot.message_handler(func=lambda message: message.text == "📖 How to Use")
-def how_to_use(message):
-    text = (
-        "<pre>"
-        "📖 SYSTEM MANUAL\n"
-        f"{LINE}\n"
-        "[1] Select a feature from the menu.\n"
-        "[2] Send the required information.\n"
-        "[3] Cost: 1 credit per successful search.\n"
-        "[4] Use 'Daily Claim' for free credits.\n"
-        "[5] Use 'Redeem Code' for bonus credits.\n"
-        "[6] Reports auto-delete in 60s.\n"
-        f"{LINE}\n"
-        "SUPPORT: @OSMIUM_9"
-        "</pre>"
-    )
-    bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
-
-@bot.message_handler(func=lambda message: message.text == "✨ Features")
-def features_list(message):
-    text = (
-        "<pre>"
-        "✨ ALL FEATURES ✨\n"
-        f"{LINE}\n"
-        "✅ [LIVE] 📱 NUM LOOKUP\n"
-        "✅ [LIVE] 🆔 AADHAAR INFO\n"
-        "⏳ [SOON] 🧠 TG ID → Num\n"
-        "⏳ [SOON] 🚗 Vehicle → Num\n"
-        "⏳ [SOON] 💳 PAN Info\n"
-        "⏳ [SOON] 🆔 Aadhaar → Ration\n"
-        f"{LINE}\n"
-        "👑 Contact @OSMIUM_9"
-        "</pre>"
-    )
-    bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
-
-@bot.message_handler(func=lambda message: message.text == "🛒 Buy Credits")
-def buy_credits(message):
-    if not is_authorized(message.from_user.id):
-        return send_access_denied(message)
-    text = (
-        "<pre>"
-        "🛒 BUY CREDITS\n"
-        f"{LINE}\n"
-        "Status : AVAILABLE\n"
-        "Method : Manual Contact\n"
-        f"{LINE}\n"
-        "👉 Click the button below to message NERD."
-        "</pre>"
-    )
-    bot.reply_to(message, text, parse_mode='HTML', reply_markup=result_menu())
-
-@bot.message_handler(func=lambda message: message.text == "🎁 Daily Claim")
-def daily_claim(message):
-    if not is_authorized(message.from_user.id):
-        return send_access_denied(message)
-        
+@bot.message_handler(func=lambda message: message.text in ["📖 How to Use", "✨ Features", "🛒 Buy Credits", "🎁 Daily Claim", "📊 My Credits"])
+def static_menus(message):
+    if not is_authorized(message.from_user.id): return send_access_denied(message)
     user_id = str(message.from_user.id)
-    if user_id == YOUR_CHAT_ID:
-        bot.reply_to(message, "<pre>👑 OWNER: UNLIMITED CREDITS</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
-        return
-
-    if user_id not in USER_DATA:
-        USER_DATA[user_id] = {"credits": 0, "last_claim": 0}
-
-    current_time = time.time()
-    last_claim = USER_DATA[user_id]["last_claim"]
     
-    if current_time - last_claim < 86400:
-        remaining = 86400 - (current_time - last_claim)
-        hours = int(remaining // 3600)
-        minutes = int((remaining % 3600) // 60)
-        text = f"<pre>⏳ CLAIM BLOCKED\n{LINE}\nTIME LEFT : {hours}h {minutes}m\n{LINE}</pre>"
+    if message.text == "📖 How to Use":
+        text = f"<pre>📖 SYSTEM MANUAL\n{LINE}\n[1] Select a feature from the menu.\n[2] Send the required info.\n[3] Cost: 1 credit per success.\n[4] Use Daily Claim for free credits.\n[5] Reports auto-delete in 60s.\n{LINE}\nSUPPORT: @OSMIUM_9</pre>"
         bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id))
-        return
-        
-    USER_DATA[user_id]["credits"] += 10
-    USER_DATA[user_id]["last_claim"] = current_time
-    text = f"<pre>🎉 CLAIM SUCCESSFUL\n{LINE}\n+10 CREDITS ADDED\nBALANCE : {USER_DATA[user_id]['credits']}\n{LINE}</pre>"
-    bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id))
+    elif message.text == "✨ Features":
+        text = f"<pre>✨ ALL FEATURES ✨\n{LINE}\n✅ [LIVE] 📱 NUM LOOKUP\n✅ [LIVE] 🆔 AADHAAR INFO\n⏳ [SOON] 🧠 TG ID → Num\n⏳ [SOON] 🚗 Vehicle → Num\n⏳ [SOON] 💳 PAN Info\n{LINE}\n👑 Contact @OSMIUM_9</pre>"
+        bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id))
+    elif message.text == "🛒 Buy Credits":
+        text = f"<pre>🛒 BUY CREDITS\n{LINE}\nStatus : AVAILABLE\nMethod : Manual Contact\n{LINE}\n👉 Click the button below to message NERD.</pre>"
+        bot.reply_to(message, text, parse_mode='HTML', reply_markup=result_menu())
+    elif message.text == "🎁 Daily Claim":
+        if user_id == YOUR_CHAT_ID:
+            bot.reply_to(message, "<pre>👑 OWNER: UNLIMITED CREDITS</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
+            return
+        if user_id not in USER_DATA: USER_DATA[user_id] = {"credits": 0, "last_claim": 0}
+        current_time = time.time()
+        if current_time - USER_DATA[user_id]["last_claim"] < 86400:
+            remaining = 86400 - (current_time - USER_DATA[user_id]["last_claim"])
+            hours = int(remaining // 3600)
+            minutes = int((remaining % 3600) // 60)
+            text = f"<pre>⏳ CLAIM BLOCKED\n{LINE}\nTIME LEFT : {hours}h {minutes}m\n{LINE}</pre>"
+            bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id))
+            return
+        USER_DATA[user_id]["credits"] += 10
+        USER_DATA[user_id]["last_claim"] = current_time
+        text = f"<pre>🎉 CLAIM SUCCESSFUL\n{LINE}\n+10 CREDITS\nBALANCE : {USER_DATA[user_id]['credits']}\n{LINE}</pre>"
+        bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id))
+    elif message.text == "📊 My Credits":
+        credits = get_user_credits(user_id)
+        text = f"<pre>💳 BALANCE INQUIRY\n{LINE}\nUSER ID : {user_id}\nCREDITS : {credits}\n{LINE}\n</pre>"
+        bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id))
 
-@bot.message_handler(func=lambda message: message.text == "📊 My Credits")
-def check_credits(message):
-    if not is_authorized(message.from_user.id):
-        return send_access_denied(message)
-    credits = get_user_credits(message.from_user.id)
-    text = f"<pre>💳 BALANCE INQUIRY\n{LINE}\nUSER ID : {message.from_user.id}\nCREDITS : {credits}\n{LINE}\n</pre>"
-    bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
-
-@bot.message_handler(func=lambda message: message.text == BTN_NUM)
-def prompt_mobile(message):
-    if not is_authorized(message.from_user.id):
-        return send_access_denied(message)
-    text = f"<pre>📱 MOBILE SEARCH INITIATED\n{LINE}\nType a 10-digit Mobile Number:</pre>"
-    msg = bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
-    bot.register_next_step_handler(msg, process_search, "MOBILE")
-
-@bot.message_handler(func=lambda message: message.text == BTN_AADHAAR)
-def prompt_aadhaar(message):
-    if not is_authorized(message.from_user.id):
-        return send_access_denied(message)
-    text = f"<pre>🆔 AADHAAR SEARCH INITIATED\n{LINE}\nType a 12-digit Aadhaar Number:</pre>"
-    msg = bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
-    bot.register_next_step_handler(msg, process_search, "AADHAAR")
+@bot.message_handler(func=lambda message: message.text in [BTN_NUM, BTN_AADHAAR])
+def prompt_search(message):
+    if not is_authorized(message.from_user.id): return send_access_denied(message)
+    user_id = str(message.from_user.id)
+    if message.text == BTN_NUM:
+        text = f"<pre>📱 MOBILE SEARCH\n{LINE}\nType a 10-digit Mobile Number:</pre>"
+        bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_search, "MOBILE")
+    else:
+        text = f"<pre>🆔 AADHAAR SEARCH\n{LINE}\nType a 12-digit Aadhaar Number:</pre>"
+        bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_search, "AADHAAR")
 
 @bot.message_handler(func=lambda message: message.text.startswith("⏳"))
 def coming_soon(message):
-    if not is_authorized(message.from_user.id):
-        return send_access_denied(message)
-    feature_name = message.text.replace("⏳ [SOON]", "").strip()
-    text = f"<pre>⚠️ SERVICE UNAVAILABLE\n{LINE}\nFEATURE : {feature_name}\nSTATUS  : COMING SOON\n{LINE}</pre>"
+    if not is_authorized(message.from_user.id): return send_access_denied(message)
+    text = f"<pre>⚠️ SERVICE UNAVAILABLE\n{LINE}\nFEATURE : {message.text.replace('⏳ [SOON]', '').strip()}\nSTATUS  : COMING SOON\n{LINE}</pre>"
     bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
 
-# --- MAIN SEARCH FUNCTION ---
 def process_search(message, query_type, direct_query=None):
     user_id = str(message.from_user.id)
-    if not is_authorized(user_id):
-        return send_access_denied(message)
+    if not is_authorized(user_id): return send_access_denied(message)
 
     query = direct_query if direct_query else message.text.strip()
     
@@ -448,11 +318,47 @@ def process_search(message, query_type, direct_query=None):
         return
         
     if query_type == "MOBILE" and (not query.isdigit() or len(query) != 10):
-        bot.reply_to(message, "<pre>❌ ERROR: Invalid Mobile Number.\nPlease enter exactly 10 digits.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
-        return
-    
+        return bot.reply_to(message, "<pre>❌ ERROR: Invalid Mobile Number.\nEnter exactly 10 digits.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
     if query_type == "AADHAAR" and (not query.isdigit() or len(query) != 12):
-        bot.reply_to(message, "<pre>❌ ERROR: Invalid Aadhaar Number.\nPlease enter exactly 12 digits.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
-        return
+        return bot.reply_to(message, "<pre>❌ ERROR: Invalid Aadhaar Number.\nEnter exactly 12 digits.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
 
-    if user_id != YOUR_CHA
+    if user_id != YOUR_CHAT_ID:
+        if user_id not in USER_DATA: USER_DATA[user_id] = {"credits": 5, "last_claim": 0}
+        if USER_DATA[user_id]["credits"] < 1:
+            return bot.reply_to(message, "<pre>❌ ERROR: INSUFFICIENT CREDITS.\nYou need 1 credit to search.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
+
+    if query in PROTECTED_NUMBERS:
+        return bot.reply_to(message, "<pre>🚫 ERROR: PROTECTED IDENTITY.\nAccess Denied.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
+        
+    msg = bot.send_message(message.chat.id, f"<pre>⚡ SEARCHING {query_type}:\n{LINE}\nTARGET: {query}\n<code>[■□□□□□□□□□] INITIALIZING...</code></pre>", parse_mode='HTML')
+    
+    for stage in ["> [■■■□□□□□□□] BYPASSING FIREWALLS...", "> [■■■■■■■■□□] EXTRACTING RECORDS..."]:
+        time.sleep(0.5)
+        bot.edit_message_text(f"<pre>⚡ SEARCHING:\n{LINE}\nTARGET: {query}\n<code>{stage}</code></pre>", message.chat.id, msg.message_id, parse_mode='HTML')
+        
+    records = []
+    try:
+        res = requests.get(API_BASE_URL.format(query), headers={'User-Agent': 'Mozilla/5.0'}, timeout=60)
+        if res.status_code == 200:
+            data = res.json()
+            if data.get('status') == 'success' and 'data' in data: records = data['data']
+    except Exception: pass
+            
+    if records:
+        record = records[0]
+        if user_id != YOUR_CHAT_ID: USER_DATA[user_id]["credits"] -= 1
+        if user_id not in SEARCH_HISTORY: SEARCH_HISTORY[user_id] = []
+        SEARCH_HISTORY[user_id].append(query)
+        
+        if user_id != YOUR_CHAT_ID:
+            try:
+                log_text = f"<pre>🚨 NEW SEARCH (SUCCESS) 🚨\n{LINE}\n👤 NAME : {message.from_user.first_name}\n🆔 ID   : {user_id}\n🔍 QUERY: {query}\n{LINE}</pre>"
+                bot.send_message(YOUR_CHAT_ID, log_text, parse_mode='HTML')
+            except: pass
+            
+        name = record.get('name', 'N/A')
+        fname = record.get('fname', 'N/A')
+        mobile = record.get('mobile', query if query_type == "MOBILE" else 'N/A')
+        alt = record.get('alt', 'None')
+        if alt == 'None' or not alt: alt = 'N/A'
+        aadhaar = record.get('id', q
