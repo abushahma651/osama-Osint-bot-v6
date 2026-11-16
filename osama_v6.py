@@ -47,13 +47,14 @@ def get_user_credits(user_id):
 # --- KEYBOARDS ---
 def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    # Priority: Indian and Aadhaar on top
     markup.row("📱 Indian Number", "🆔 Aadhaar Info")
     markup.row("☎️ Truecaller", "📍 Tracker")
     markup.row("🚗 Vehicle", "🏦 IFSC", "📲 IMEI")
     markup.row("🌐 IP", "📍 Pincode", "🏢 GST")
     markup.row("📸 Instagram", "✈️ TG to Number")
-    markup.row("💳 PAN Lookup", "🔗 PAN GST", "🎮 Free Fire ID")
-    markup.row("🇵🇰 CNIC Lookup", "✉️ SMS", "🚨 Chalan")
+    markup.row("💳 PAN Lookup", "🔗 PAN GST")
+    markup.row("🇵🇰 Pakistan Number", "✉️ SMS", "🚨 Chalan")
     markup.row("💳 UPI", "👨‍👩‍👧 Family", "🔍 Name Search")
     markup.row("🚗➡️📱 Vehicle to Num", "💰 Fampay")
     markup.row("🎁 Refer & Earn", "🪙 Check Credits")
@@ -79,6 +80,19 @@ def delete_message_later(chat_id, message_id, delay=60):
 def send_welcome(message):
     user_id = str(message.from_user.id)
     
+    # Referral Logic
+    args = message.text.split()
+    if len(args) > 1 and args[1].startswith("ref_"):
+        referrer_id = args[1].replace("ref_", "")
+        if referrer_id != user_id and referrer_id in ALLOWED_USERS:
+            if referrer_id not in USER_DATA:
+                USER_DATA[referrer_id] = {"credits": 5, "last_claim": 0}
+            USER_DATA[referrer_id]["credits"] += 5
+            try:
+                bot.send_message(referrer_id, f"🎉 <b>Referral Bonus!</b>\nYou earned 5 credits because {message.from_user.first_name} joined using your link.", parse_mode='HTML')
+            except Exception:
+                pass
+
     # 🚫 NEW USERS BLOCKED
     if not is_authorized(user_id):
         bot.reply_to(
@@ -91,19 +105,47 @@ def send_welcome(message):
         )
         return
 
-    # Authorized User Check
     credits = get_user_credits(user_id)
     
-    # 👇 YAHAN NAAM CHANGE HUA HAI 👇
+    # Clean Start Message (Removed 60s text)
     text = (
         "🟢 <b>NERD PRIVATE OSINT</b>\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n"
         "Welcome back to NERD PRIVATE OSINT.\n"
         f"💳 <b>Your Credits:</b> {credits}\n\n"
-        "Select an option from the menu below.\n"
-        "⚠️ <i>Reports will auto-delete in 60 seconds.</i>"
+        "Select an option from the menu below."
     )
     bot.send_message(message.chat.id, text, parse_mode='HTML', reply_markup=main_menu())
+
+# --- REFER & EARN ---
+@bot.message_handler(func=lambda message: message.text == "🎁 Refer & Earn")
+def refer_earn(message):
+    user_id = str(message.from_user.id)
+    if not is_authorized(user_id): return
+    
+    bot_info = bot.get_me()
+    link = f"https://t.me/{bot_info.username}?start=ref_{user_id}"
+    
+    text = (
+        "🎁 <b>Refer & Earn</b>\n\n"
+        "Invite your friends to NERD PRIVATE OSINT.\n"
+        "You get <b>5 Credits</b> for every friend who joins using your link!\n\n"
+        f"🔗 <b>Your Link:</b>\n<code>{link}</code>"
+    )
+    bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu())
+
+# --- BUY CREDITS ---
+@bot.message_handler(func=lambda message: message.text == "🛒 Buy Credits")
+def buy_credits(message):
+    user_id = str(message.from_user.id)
+    if not is_authorized(user_id): return
+    
+    text = (
+        "💳 <b>Buy Credits</b>\n\n"
+        "To purchase more credits, please contact the developer directly.\n"
+        "Click the button below to message NERD."
+    )
+    bot.reply_to(message, text, parse_mode='HTML', reply_markup=result_menu())
 
 # --- DAILY CLAIM ---
 @bot.message_handler(func=lambda message: message.text == "🎁 Daily Claim")
@@ -155,7 +197,7 @@ def prompt_aadhaar(message):
     bot.register_next_step_handler(msg, process_search, "AADHAAR")
 
 # --- "COMING SOON" ---
-@bot.message_handler(func=lambda message: message.text in ["☎️ Truecaller", "📍 Tracker", "🚗 Vehicle", "🏦 IFSC", "📲 IMEI", "🌐 IP", "📍 Pincode", "🏢 GST", "📸 Instagram", "✈️ TG to Number", "💳 PAN Lookup", "🔗 PAN GST", "🎮 Free Fire ID", "🇵🇰 CNIC Lookup", "✉️ SMS", "🚨 Chalan", "💳 UPI", "👨‍👩‍👧 Family", "🔍 Name Search", "🚗➡️📱 Vehicle to Num", "💰 Fampay", "🎁 Refer & Earn", "🛒 Buy Credits"])
+@bot.message_handler(func=lambda message: message.text in ["☎️ Truecaller", "📍 Tracker", "🚗 Vehicle", "🏦 IFSC", "📲 IMEI", "🌐 IP", "📍 Pincode", "🏢 GST", "📸 Instagram", "✈️ TG to Number", "💳 PAN Lookup", "🔗 PAN GST", "🇵🇰 Pakistan Number", "✉️ SMS", "🚨 Chalan", "💳 UPI", "👨‍👩‍👧 Family", "🔍 Name Search", "🚗➡️📱 Vehicle to Num", "💰 Fampay"])
 def coming_soon(message):
     if not is_authorized(message.from_user.id): return
     bot.reply_to(message, "⚠️ <b>Soon this service will start.</b>\nStay tuned for the next update by NERD.", parse_mode='HTML', reply_markup=main_menu())
@@ -243,7 +285,7 @@ def process_search(message, query_type, direct_query=None):
 
         curr_cred = "Unlimited" if user_id == YOUR_CHAT_ID else USER_DATA[user_id]["credits"]
 
-        # 👇 YAHAN BHI REPORT KA NAAM CHANGE HUA HAI 👇
+        # 👇 Yahan Report ke niche Warning add ki gayi hai 👇
         report = (
             "<pre>"
             "NERD PRIVATE OSINT REPORT\n\n"
@@ -259,7 +301,8 @@ def process_search(message, query_type, direct_query=None):
             "------------------------------\n"
             f"Credits Left   : {curr_cred}\n"
             "By : @OSMIUM_9\n"
-            "</pre>"
+            "</pre>\n\n"
+            "⚠️ <b>NOTE:</b> <i>This report will be auto-deleted in 60 seconds. Save it before it gets deleted!</i>"
         )
         
         sent_msg = bot.edit_message_text(report, message.chat.id, msg.message_id, parse_mode='HTML', reply_markup=result_menu())
