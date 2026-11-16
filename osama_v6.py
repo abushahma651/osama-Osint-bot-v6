@@ -6,6 +6,7 @@ import requests
 import time
 import random
 import string
+import traceback
 from telebot import types
 
 # --- CONFIGURATION ---
@@ -42,7 +43,8 @@ def get_user_credits(user_id):
     return USER_DATA[user_id]["credits"]
 
 def generate_code(length=8):
-    return ''.join(random.choice(string.ascii_uppercase + string.digits) for i in range(length))
+    chars = string.ascii_uppercase + string.digits
+    return ''.join(random.choice(chars) for i in range(length))
 
 # --- KEYBOARDS ---
 def main_menu(user_id):
@@ -63,7 +65,6 @@ def main_menu(user_id):
     
     if str(user_id) == YOUR_CHAT_ID:
         markup.row("👑 ADMIN PANEL")
-        
     return markup
 
 def admin_panel_menu():
@@ -166,7 +167,8 @@ def process_addcredit(message):
     if str(message.from_user.id) != YOUR_CHAT_ID: return
     try:
         args = message.text.split()
-        target_id, amount = args[0], int(args[1])
+        target_id = args[0]
+        amount = int(args[1])
         if target_id not in USER_DATA: USER_DATA[target_id] = {"credits": 0, "last_claim": 0}
         USER_DATA[target_id]["credits"] += amount
         bot.reply_to(message, f"<pre>✅ Added {amount} credits to {target_id}.</pre>", parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
@@ -213,7 +215,13 @@ def send_welcome(message):
     credits = get_user_credits(user_id)
     image_url = "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
     
-    profile_text = f"<pre>╔══════════════════════════════╗\n║      NERD PRIVATE OSINT      ║\n╚══════════════════════════════╝\n👋 Welcome!\n{LINE}\n👤 NAME    : {message.from_user.first_name}\n🆔 USER ID : {user_id}\n💳 CREDITS : {credits}\n{LINE}\n✨ WHAT CAN THIS BOT DO?\n🔍 OSINT INTELLIGENCE\n📱 Number • Username • Domain\n📊 Data Discovery • Verification\n{LINE}\n🚧 NOTE: ONLY 2 APIs ARE ACTIVE.\n✅ [LIVE] Indian Number & Aadhaar Info.\n⏳ [SOON] Other services coming soon!\n{LINE}\n🔒 VIP Access required for searching.\n👑 OWNER — @OSMIUM_9\n{LINE}</pre>"
+    text1 = f"<pre>╔══════════════════════════════╗\n║      NERD PRIVATE OSINT      ║\n╚══════════════════════════════╝\n"
+    text2 = f"👋 Welcome!\n{LINE}\n👤 NAME    : {message.from_user.first_name}\n🆔 USER ID : {user_id}\n💳 CREDITS : {credits}\n"
+    text3 = f"{LINE}\n✨ WHAT CAN THIS BOT DO?\n🔍 OSINT INTELLIGENCE\n📱 Number • Username • Domain\n📊 Data Discovery • Verification\n"
+    text4 = f"{LINE}\n🚧 NOTE: ONLY 2 APIs ARE ACTIVE.\n✅ [LIVE] Indian Number & Aadhaar Info.\n⏳ [SOON] Other services coming soon!\n"
+    text5 = f"{LINE}\n🔒 VIP Access required for searching.\n👑 OWNER — @OSMIUM_9\n{LINE}</pre>"
+    
+    profile_text = text1 + text2 + text3 + text4 + text5
     bot.send_photo(message.chat.id, image_url, caption=profile_text, parse_mode='HTML', reply_markup=main_menu(user_id))
 
 @bot.message_handler(commands=['redeem'])
@@ -304,7 +312,8 @@ def prompt_search(message):
 @bot.message_handler(func=lambda message: message.text.startswith("⏳"))
 def coming_soon(message):
     if not is_authorized(message.from_user.id): return send_access_denied(message)
-    text = f"<pre>⚠️ SERVICE UNAVAILABLE\n{LINE}\nFEATURE : {message.text.replace('⏳ [SOON]', '').strip()}\nSTATUS  : COMING SOON\n{LINE}</pre>"
+    feature_name = message.text.replace("⏳ [SOON]", "").strip()
+    text = f"<pre>⚠️ SERVICE UNAVAILABLE\n{LINE}\nFEATURE : {feature_name}\nSTATUS  : COMING SOON\n{LINE}</pre>"
     bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
 
 def process_search(message, query_type, direct_query=None):
@@ -317,10 +326,12 @@ def process_search(message, query_type, direct_query=None):
         bot.clear_step_handler(message)
         return
         
-    if query_type == "MOBILE" and (not query.isdigit() or len(query) != 10):
-        return bot.reply_to(message, "<pre>❌ ERROR: Invalid Mobile Number.\nEnter exactly 10 digits.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
-    if query_type == "AADHAAR" and (not query.isdigit() or len(query) != 12):
-        return bot.reply_to(message, "<pre>❌ ERROR: Invalid Aadhaar Number.\nEnter exactly 12 digits.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
+    if query_type == "MOBILE":
+        if not query.isdigit() or len(query) != 10:
+            return bot.reply_to(message, "<pre>❌ ERROR: Invalid Mobile Number.\nEnter exactly 10 digits.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
+    elif query_type == "AADHAAR":
+        if not query.isdigit() or len(query) != 12:
+            return bot.reply_to(message, "<pre>❌ ERROR: Invalid Aadhaar Number.\nEnter exactly 12 digits.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
 
     if user_id != YOUR_CHAT_ID:
         if user_id not in USER_DATA: USER_DATA[user_id] = {"credits": 5, "last_claim": 0}
@@ -358,7 +369,3 @@ def process_search(message, query_type, direct_query=None):
             
         name = record.get('name', 'N/A')
         fname = record.get('fname', 'N/A')
-        mobile = record.get('mobile', query if query_type == "MOBILE" else 'N/A')
-        alt = record.get('alt', 'None')
-        if alt == 'None' or not alt: alt = 'N/A'
-        aadhaar = record.get('id', query if query_type == "AADHAAR" else 'N/A')
