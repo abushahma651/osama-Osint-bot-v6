@@ -7,7 +7,6 @@ import time
 import random
 import string
 import json
-import traceback
 from telebot import types
 
 # --- CONFIGURATION ---
@@ -28,7 +27,7 @@ ALLOWED_USERS = [
     "5704555109", "901112667", "8659201578"
 ]
 
-# --- API CONFIGURATION ---
+# --- APIs ---
 MOBILE_APIS = [
     {"name": "API_1 (Hi-Tek)", "url": "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"},
     {"name": "API_2 (Ronak)", "url": "https://api.allprinthub.in/api?=num_info_767&key=7day&%40Ronak_api={}"}
@@ -69,10 +68,8 @@ def is_authorized(user_id):
 
 def get_user_credits(user_id):
     user_id = str(user_id)
-    if user_id == YOUR_CHAT_ID:
-        return "UNLIMITED"
-    if user_id not in USER_DATA:
-        USER_DATA[user_id] = {"credits": 5, "last_claim": 0}
+    if user_id == YOUR_CHAT_ID: return "UNLIMITED"
+    if user_id not in USER_DATA: USER_DATA[user_id] = {"credits": 5, "last_claim": 0}
     return USER_DATA[user_id]["credits"]
 
 def generate_code(length=8):
@@ -140,7 +137,7 @@ def delete_message_later(chat_id, message_id, delay=60):
     except: pass
 
 # =====================================================================
-# 👑 ADMIN PANEL LOGIC
+# 👑 ADMIN PANEL
 # =====================================================================
 
 @bot.message_handler(func=lambda message: message.text == "👑 ADMIN PANEL" and str(message.from_user.id) == YOUR_CHAT_ID)
@@ -311,40 +308,12 @@ def process_redeem(msg):
     else: bot.reply_to(msg, "<pre>❌ Invalid or Expired Code.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
 
 # =====================================================================
-# 🔍 DYNAMIC SEARCH LOGIC
+# 🔍 SEARCH LOGIC
 # =====================================================================
-
-def format_vehicle_data(record):
-    """Vehicle API ke JSON ko systematic format mein convert karta hai"""
-    text = f"<pre>"
-    text += f"VEHICLE RC INFORMATION\n{LINE}\n"
-    text += f"📋 OWNER DETAILS\n"
-    text += f"👤 Name        : {record.get('owner_name', 'N/A')}\n"
-    text += f"📱 Mobile      : {record.get('mobile_number', 'N/A')}\n"
-    text += f"🆔 Vehicle No  : {record.get('vehicle_number', 'N/A')}\n"
-    text += f"🚗 Maker/Model : {record.get('maker_model', 'N/A')}\n"
-    text += f"🎨 Color       : {record.get('color', 'N/A')}\n\n"
-    text += f"⚙️ VEHICLE SPECS\n"
-    text += f"🔧 Chassis No  : {record.get('chassis_number', 'N/A')}\n"
-    text += f"⚙️ Engine No   : {record.get('engine_number', 'N/A')}\n"
-    text += f"⛽ Fuel Type   : {record.get('fuel_type', 'N/A')}\n"
-    text += f"📅 Reg. Date   : {record.get('regDate', 'N/A')}\n"
-    text += f"💺 Seats       : {record.get('seatCapacity', 'N/A')}\n\n"
-    text += f"🛡 INSURANCE\n"
-    text += f"🏢 Company     : {record.get('insuranceCompanyName', 'N/A')}\n"
-    text += f"📄 Policy No   : {record.get('insurancePolicyNumber', 'N/A')}\n"
-    text += f"📅 Valid Upto  : {record.get('insuranceUpto', 'N/A')}\n"
-    text += f"{LINE}\n"
-    text += f"By : @OSMIUM_9\n"
-    text += f"NERD PRIVATE OSINT\n"
-    text += f"{LINE}\n"
-    text += f"⚠️ AUTO-DELETE IN 60s.\n</pre>"
-    return text
 
 def process_api_request(message, query_type, apis):
     user_id = str(message.from_user.id)
     if not is_authorized(user_id): return send_access_denied(message)
-
     query = message.text.strip()
     
     if query.startswith('/'): return
@@ -372,18 +341,22 @@ def process_api_request(message, query_type, apis):
             if res.status_code == 200:
                 data = res.json()
                 
-                if query_type == "VEHICLE":
-                    # Vehicle ke liye custom formatting
-                    if "vehicle_data" in data:
-                        v_data = data["vehicle_data"]
-                        report = format_vehicle_data(v_data)
-                        found_any = True
-                    else:
-                        json_str = json.dumps(data, indent=2)
-                        report = f"<pre>{json_str[:3000]}\n{LINE}\nBy : @OSMIUM_9\n{LINE}</pre>"
-                        found_any = True
+                if query_type == "VEHICLE" and "vehicle_data" in data:
+                    v_data = data["vehicle_data"]
+                    report = f"<pre>VEHICLE RC INFORMATION\n{LINE}\n"
+                    report += f"👤 Name        : {v_data.get('owner_name', 'N/A')}\n"
+                    report += f"📱 Mobile      : {v_data.get('mobile_number', 'N/A')}\n"
+                    report += f"🆔 Vehicle No  : {v_data.get('vehicle_number', 'N/A')}\n"
+                    report += f"🚗 Maker/Model : {v_data.get('maker_model', 'N/A')}\n"
+                    report += f"🎨 Color       : {v_data.get('color', 'N/A')}\n"
+                    report += f"⚙️ Engine No   : {v_data.get('engine_number', 'N/A')}\n"
+                    report += f"🔧 Chassis No  : {v_data.get('chassis_number', 'N/A')}\n"
+                    report += f"⛽ Fuel Type   : {v_data.get('fuel_type', 'N/A')}\n"
+                    report += f"📅 Reg. Date   : {v_data.get('regDate', 'N/A')}\n"
+                    report += f"🛡 Insurance   : {v_data.get('insuranceCompanyName', 'N/A')}\n"
+                    report += f"{LINE}\nBy : @OSMIUM_9\nNERD PRIVATE OSINT\n{LINE}\n⚠️ AUTO-DELETE IN 60s.\n</pre>"
+                    found_any = True
                 else:
-                    # Baaki APIs ke liye JSON formatting
                     json_str = json.dumps(data, indent=2)
                     if len(json_str) > 50 and "error" not in json_str.lower():
                         report = f"<pre>NERD OSINT REPORT\n{LINE}\nQUERY : {query}\nTYPE  : {query_type}\nSOURCE: {api['name']}\n{LINE}\n{json_str[:3000]}\n{LINE}\nBy : @OSMIUM_9\nNERD PRIVATE OSINT\n{LINE}\n⚠️ AUTO-DELETE IN 60s.\n</pre>"
@@ -393,12 +366,23 @@ def process_api_request(message, query_type, apis):
                     if user_id != YOUR_CHAT_ID: USER_DATA[user_id]["credits"] -= 1
                     sent_msg = bot.send_message(message.chat.id, report, parse_mode='HTML', reply_markup=result_menu())
                     threading.Thread(target=delete_message_later, args=(message.chat.id, sent_msg.message_id, 60)).start()
-                    break # Ek API se data mil gaya toh dusri try mat karo
-                    
-        except Exception:
-            pass
+                    break
+        except Exception: pass
             
     if found_any:
         bot.delete_message(message.chat.id, msg.message_id)
-        try:
-            log_text = f"<pre>🚨 NEW SEARCH (SUCCESS) 🚨\
+    else:
+        bot.edit_message_text(text=f"<pre>🔴 DATA NOT FOUND\n{LINE}\nTARGET : {query}\nSTATUS : NO RECORDS.\n\n✅ No credits deducted.</pre>", chat_id=message.chat.id, message_id=msg.message_id, parse_mode='HTML', reply_markup=result_menu())
+
+# =====================================================================
+# 🔍 MENU HANDLERS
+# =====================================================================
+
+@bot.message_handler(func=lambda message: message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE, BTN_RATION, BTN_GST, BTN_VOTER])
+def prompt_search(message):
+    if not is_authorized(message.from_user.id): return send_access_denied(message)
+    user_id = str(message.from_user.id)
+    
+    if message.text == BTN_NUM:
+        text = f"<pre>📱 MOBILE SEARCH\n{LINE}\nType a 10-digit Mobile Number:</pre>"
+        bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_re
