@@ -14,18 +14,17 @@ BOT_TOKEN = os.environ.get('BOT_TOKEN')
 YOUR_CHAT_ID = str(os.environ.get('CHAT_ID'))
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# --- DATABASE ---
 USER_DATA = {} 
 SEARCH_HISTORY = {} 
 REDEEM_CODES = {} 
 PROTECTED_NUMBERS = ["9621303160", "7991536322", "8604302624", "6204473620"]
+
 ALLOWED_USERS = [
     YOUR_CHAT_ID,       
     "8707785706", "8898567917", "6700078527",
     "5704555109", "901112667", "8659201578"
 ]
 
-# --- APIS ---
 MOBILE_APIS = [
     {"name": "API_1", "url": "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"},
     {"name": "API_2", "url": "https://api.allprinthub.in/api?=num_info_767&key=7day&%40Ronak_api={}"}
@@ -33,9 +32,11 @@ MOBILE_APIS = [
 AADHAAR_APIS = [
     {"name": "API_1", "url": "https://socialxhub.online/adhar?q={}&page=1&token=ak_0fd6d3eeccff475cb5c499c5fe17148a"}
 ]
-VEHICLE_APIS = [
-    {"name": "API_1", "url": "https://socialxhub.online/vhi?q={}&page=1&token=ak_0dc6a0959e094e838360bc611dfcab16"},
-    {"name": "API_2", "url": "https://api.allprinthub.in/api?=vehicle_all_in_1&key=free&q={}"}
+VEHICLE_INFO_APIS = [
+    {"name": "API_1", "url": "https://socialxhub.online/vhi?q={}&page=1&token=ak_0dc6a0959e094e838360bc611dfcab16"}
+]
+VEHICLE_CHALLAN_APIS = [
+    {"name": "API_1", "url": "https://api.allprinthub.in/api?=vehicle_all_in_1&key=free&q={}"}
 ]
 RATION_APIS = [
     {"name": "API_1", "url": "https://socialxhub.online/ration?q={}&page=1&token=ak_16649033d4924a4eba978c9b7fd8c109"}
@@ -49,7 +50,8 @@ VOTER_APIS = [
 
 BTN_NUM = "✅ [LIVE] 📱 NUM LOOKUP"
 BTN_AADHAAR = "✅ [LIVE] 🆔 AADHAAR INFO"
-BTN_VEHICLE = "✅ [LIVE] 🚗 VEHICLE INFO"
+BTN_VEHICLE_INFO = "✅ [LIVE] 🚗 VEHICLE INFO"
+BTN_VEHICLE_CHALLAN = "✅ [LIVE] 🚨 VEHICLE CHALLAN"
 BTN_RATION = "✅ [LIVE] 👥 RATION FAMILY"
 BTN_GST = "✅ [LIVE] 🏢 GST INFO"
 BTN_VOTER = "✅ [LIVE] 🗳️ VOTER INFO"
@@ -68,31 +70,39 @@ def generate_code(length=8):
     chars = string.ascii_uppercase + string.digits
     return ''.join(random.choice(chars) for i in range(length))
 
-# --- KEYBOARDS ---
+# =====================================================================
+# 🎨 MENUS & KEYBOARDS
+# =====================================================================
+
 def main_menu(user_id):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     
+    # Top LIVE APIs (Priority)
     markup.row(BTN_NUM)
     markup.row(BTN_AADHAAR)
-    markup.row(BTN_VEHICLE, BTN_RATION)
-    markup.row(BTN_GST, BTN_VOTER)
-    markup.row("🎟️ Redeem Code", "📖 How to Use")
+    markup.row(BTN_VEHICLE_INFO)
+    markup.row(BTN_VEHICLE_CHALLAN)
+    markup.row(BTN_RATION, BTN_GST)
+    markup.row(BTN_VOTER, "🎟️ Redeem Code")
     
-    markup.row("🔹 PREMIUM FEATURES (SOON) 🔹")
+    # Divider
+    markup.row("🔹 COMING SOON (SOON) 🔹")
+    
+    # Coming Soon Features
     markup.row("⏳ [SOON] 👨‍👩‍👧 AADHAAR FAMILY")
     markup.row("⏳ [SOON] 🧠 TG ID → Num", "⏳ [SOON] 👤 TG User → Num")
     markup.row("⏳ [SOON] 📧 Email → Num", "⏳ [SOON] 🌐 Web Scraper")
     markup.row("⏳ [SOON] 🏡 Vehicle Address", "⏳ [SOON] 📄 RC → PDF")
-    markup.row("⏳ [SOON] 🚨 Vehicle Challan", "⏳ [SOON] 📸 Instagram Info")
-    markup.row("⏳ [SOON] 📝 Name → Random Info", "⏳ [SOON] 🆔 Aadhaar → Ration")
-    markup.row("⏳ [SOON] 💳 PAN Info", "⏳ [SOON] ⚪ LPG Info")
-    markup.row("⏳ [SOON] 🚙 Num → Vehicle", "⏳ [SOON] 🎮 BGMI Info")
+    markup.row("⏳ [SOON] 📸 Instagram Info", "⏳ [SOON] 💳 PAN Info")
+    markup.row("⏳ [SOON] ⚪ LPG Info", "⏳ [SOON] 🎮 BGMI Info")
     
+    # Account Section
     markup.row("📊 My Credits", "🛒 Buy Credits")
-    markup.row("🎁 Daily Claim")
+    markup.row("🎁 Daily Claim", "📖 How to Use")
     
     if str(user_id) == YOUR_CHAT_ID:
         markup.row("👑 ADMIN PANEL")
+        
     return markup
 
 def admin_panel_menu():
@@ -125,7 +135,7 @@ def delete_message_later(chat_id, message_id, delay=60):
     except: pass
 
 # =====================================================================
-# 👑 ADMIN PANEL
+# 👑 ADMIN PANEL LOGIC
 # =====================================================================
 
 @bot.message_handler(func=lambda message: message.text == "👑 ADMIN PANEL" and str(message.from_user.id) == YOUR_CHAT_ID)
@@ -227,7 +237,7 @@ def process_remove(message):
         bot.reply_to(message, f"<pre>✅ User {rem_id} removed.</pre>", parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
     else: bot.reply_to(message, "<pre>⚠️ User not found.</pre>", parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
 
-# =====================================================================
+    # =====================================================================
 # 🤖 PUBLIC COMMANDS
 # =====================================================================
 
@@ -239,7 +249,7 @@ def send_welcome(message):
     
     text1 = f"<pre>╔══════════════════════════════╗\n║      NERD PRIVATE OSINT      ║\n╚══════════════════════════════╝\n"
     text2 = f"👋 Welcome!\n{LINE}\n👤 NAME    : {message.from_user.first_name}\n🆔 USER ID : {user_id}\n💳 CREDITS : {credits}\n"
-    text3 = f"{LINE}\n🚧 NOTE: ONLY 2 APIs ARE ACTIVE.\n✅ [LIVE] Indian Number & Aadhaar Info.\n⏳ [SOON] Other services coming soon!\n"
+    text3 = f"{LINE}\n🚧 NOTE: ALL APIs ARE ACTIVE.\n"
     text4 = f"{LINE}\n🔒 VIP Access required for searching.\n👑 OWNER — @OSMIUM_9\n{LINE}</pre>"
     
     profile_text = text1 + text2 + text3 + text4
@@ -296,18 +306,8 @@ def process_redeem(msg):
     else: bot.reply_to(msg, "<pre>❌ Invalid or Expired Code.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
 
 # =====================================================================
-# 🔍 DYNAMIC SEARCH LOGIC
+# 🔍 DYNAMIC SEARCH LOGIC (MULTI-API IN ONE BOX)
 # =====================================================================
-
-def clean_json(data):
-    json_str = json.dumps(data, indent=2)
-    lines = json_str.split('\n')
-    clean_lines = []
-    for line in lines:
-        if "ronak" in line.lower() or "powered" in line.lower() or "support" in line.lower():
-            continue
-        clean_lines.append(line)
-    return '\n'.join(clean_lines)
 
 def process_api_request(message, query_type, apis):
     user_id = str(message.from_user.id)
@@ -331,45 +331,64 @@ def process_api_request(message, query_type, apis):
     SEARCH_HISTORY[user_id].append(f"{query_type} : {query}")
     
     found_any = False
-    
+    combined_json_str = ""
+
+    # Saari APIs ko trigger karein aur data ko ek box mein jodein
     for api in apis:
         try:
             url = api["url"].format(query)
-            res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=30)
+            res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
             
             if res.status_code == 200:
                 data = res.json()
                 
-                if query_type == "VEHICLE" and "vehicle_data" in data:
+                # Agar vehicle info hai, toh usko format karein
+                if query_type == "VEHICLE_INFO" and "vehicle_data" in data:
                     v_data = data["vehicle_data"]
-                    report = f"<pre>VEHICLE RC INFORMATION\n{LINE}\n"
-                    report += f"👤 Name        : {v_data.get('owner_name', 'N/A')}\n"
-                    report += f"📱 Mobile      : {v_data.get('mobile_number', 'N/A')}\n"
-                    report += f"🆔 Vehicle No  : {v_data.get('vehicle_number', 'N/A')}\n"
-                    report += f"🚗 Maker/Model : {v_data.get('maker_model', 'N/A')}\n"
-                    report += f"🎨 Color       : {v_data.get('color', 'N/A')}\n"
-                    report += f"⚙️ Engine No   : {v_data.get('engine_number', 'N/A')}\n"
-                    report += f"🔧 Chassis No  : {v_data.get('chassis_number', 'N/A')}\n"
-                    report += f"⛽ Fuel Type   : {v_data.get('fuel_type', 'N/A')}\n"
-                    report += f"📅 Reg. Date   : {v_data.get('regDate', 'N/A')}\n"
-                    report += f"🛡 Insurance   : {v_data.get('insuranceCompanyName', 'N/A')}\n"
-                    report += f"{LINE}\nBy : @OSMIUM_9\nNERD PRIVATE OSINT\n{LINE}\n⚠️ AUTO-DELETE IN 60s.\n</pre>"
+                    combined_json_str += f"--- {api['name']} ---\n"
+                    combined_json_str += f"Name: {v_data.get('owner_name', 'N/A')}\n"
+                    combined_json_str += f"Vehicle: {v_data.get('vehicle_number', 'N/A')}\n"
+                    combined_json_str += f"Model: {v_data.get('maker_model', 'N/A')}\n"
+                    combined_json_str += f"Fuel: {v_data.get('fuel_type', 'N/A')}\n\n"
                     found_any = True
+                # Baaki APIs ke liye white JSON format
                 else:
-                    clean_data = clean_json(data)
-                    if len(clean_data) > 50 and "error" not in clean_data.lower():
-                        report = f"<pre>{clean_data[:3000]}\n{LINE}\nBy : @OSMIUM_9\nNERD PRIVATE OSINT\n{LINE}\n⚠️ AUTO-DELETE IN 60s.\n</pre>"
+                    json_str = json.dumps(data, indent=2)
+                    # "Powered by" aur "Ronak" wali lines ko remove karein
+                    clean_lines = []
+                    for line in json_str.split('\n'):
+                        if "ronak" in line.lower() or "powered" in line.lower() or "support" in line.lower():
+                            continue
+                        clean_lines.append(line)
+                    
+                    clean_json = '\n'.join(clean_lines)
+                    if len(clean_json) > 20 and "error" not in clean_json.lower():
+                        combined_json_str += f"--- {api['name']} ---\n{clean_json[:1500]}\n\n"
                         found_any = True
-                
-                if found_any:
-                    if user_id != YOUR_CHAT_ID: USER_DATA[user_id]["credits"] -= 1
-                    sent_msg = bot.send_message(message.chat.id, report, parse_mode='HTML', reply_markup=result_menu())
-                    threading.Thread(target=delete_message_later, args=(message.chat.id, sent_msg.message_id, 60)).start()
-                    break
-        except Exception: pass
+        except Exception:
+            pass
             
     if found_any:
+        if user_id != YOUR_CHAT_ID: USER_DATA[user_id]["credits"] -= 1
+        
+        # Final Report Box (White Text)
+        report = f"<pre>NERD PRIVATE OSINT REPORT\n"
+        report += f"{LINE}\n"
+        report += f"QUERY  : {query}\n"
+        report += f"TYPE   : {query_type}\n"
+        report += f"{LINE}\n"
+        report += combined_json_str
+        report += f"{LINE}\n"
+        report += f"By : @OSMIUM_9\n"
+        report += f"NERD PRIVATE OSINT\n"
+        report += f"{LINE}\n"
+        report += f"⚠️ AUTO-DELETE IN 60s.\n</pre>"
+        
+        sent_msg = bot.send_message(message.chat.id, report, parse_mode='HTML', reply_markup=result_menu())
+        threading.Thread(target=delete_message_later, args=(message.chat.id, sent_msg.message_id, 60)).start()
         bot.delete_message(message.chat.id, msg.message_id)
+        
+        # Search Detected Alert to Owner
         try:
             log_text = f"<pre>🚨 NEW SEARCH (SUCCESS) 🚨\n{LINE}\n👤 NAME : {message.from_user.first_name}\n🆔 ID   : {user_id}\n🔍 QUERY: {query}\n{LINE}</pre>"
             bot.send_message(YOUR_CHAT_ID, log_text, parse_mode='HTML')
@@ -378,9 +397,81 @@ def process_api_request(message, query_type, apis):
         bot.edit_message_text(text=f"<pre>🔴 DATA NOT FOUND\n{LINE}\nTARGET : {query}\nSTATUS : NO RECORDS.\n\n✅ No credits deducted.</pre>", chat_id=message.chat.id, message_id=msg.message_id, parse_mode='HTML', reply_markup=result_menu())
 
 # =====================================================================
-# 🔍 MENU HANDLERS
+# 🔍 MENU HANDLERS (PROMPTS)
 # =====================================================================
 
-@bot.message_handler(func=lambda message: message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE, BTN_RATION, BTN_GST, BTN_VOTER])
+@bot.message_handler(func=lambda message: message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_GST, BTN_VOTER])
 def prompt_search(message):
-    if not is_authorized(message.from_user.id): return send_
+    if not is_authorized(message.from_user.id): return send_access_denied(message)
+    user_id = str(message.from_user.id)
+    
+    if message.text == BTN_NUM:
+        text = f"<pre>📱 MOBILE SEARCH\n{LINE}\nType a 10-digit Mobile Number:</pre>"
+        bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_request, "MOBILE", MOBILE_APIS)
+    elif message.text == BTN_AADHAAR:
+        text = f"<pre>🆔 AADHAAR SEARCH\n{LINE}\nType a 12-digit Aadhaar Number:</pre>"
+        bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_request, "AADHAAR", AADHAAR_APIS)
+    elif message.text == BTN_VEHICLE_INFO:
+        text = f"<pre>🚗 VEHICLE INFO SEARCH\n{LINE}\nType Vehicle Number (e.g., UP54W0070):</pre>"
+        bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_request, "VEHICLE_INFO", VEHICLE_INFO_APIS)
+    elif message.text == BTN_VEHICLE_CHALLAN:
+        text = f"<pre>🚨 VEHICLE CHALLAN SEARCH\n{LINE}\nType Vehicle Number:</pre>"
+        bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_request, "VEHICLE_CHALLAN", VEHICLE_CHALLAN_APIS)
+    elif message.text == BTN_RATION:
+        text = f"<pre>👥 RATION SEARCH\n{LINE}\nType Ration Card Number:</pre>"
+        bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_request, "RATION", RATION_APIS)
+    elif message.text == BTN_GST:
+        text = f"<pre>🏢 GST SEARCH\n{LINE}\nType GST Number:</pre>"
+        bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_request, "GST", GST_APIS)
+    elif message.text == BTN_VOTER:
+        text = f"<pre>🗳️ VOTER SEARCH\n{LINE}\nType Voter ID Number:</pre>"
+        bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_request, "VOTER", VOTER_APIS)
+
+# =====================================================================
+# 🛡️ INVALID INPUT & BOT START
+# =====================================================================
+
+@bot.message_handler(func=lambda message: True)
+def invalid_input(message):
+    # Menu Button Handler Bug Fix
+    if message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_GST, BTN_VOTER]:
+        prompt_search(message)
+    elif message.text in ["📖 How to Use", "🛒 Buy Credits", "🎁 Daily Claim", "📊 My Credits", "🎟️ Redeem Code"]:
+        static_menus(message)
+    elif message.text == "👑 ADMIN PANEL" and str(message.from_user.id) == YOUR_CHAT_ID:
+        show_admin_panel(message)
+    else:
+        if not is_authorized(message.from_user.id): return send_access_denied(message)
+        bot.reply_to(message, "<pre>❌ ERROR: Unrecognized Command.\nUse the menu below.</pre>", parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
+
+# --- WEB SERVER (Render ke liye) ---
+app = Flask(__name__)
+
+@app.route('/')
+def home(): 
+    return "NERD PRIVATE OSINT Bot is running!"
+
+def run_web():
+    try:
+        port = int(os.environ.get("PORT", 8080))
+        app.run(host='0.0.0.0', port=port)
+    except Exception as e:
+        print(f"Web server error: {e}")
+
+if __name__ == "__main__":
+    print("Starting bot...")
+    threading.Thread(target=run_web, daemon=True).start()
+    
+    try:
+        bot.remove_webhook()
+        print("Webhook removed.")
+    except Exception as e:
+        print(f"Webhook removal failed: {e}")
+    
+    print("Starting polling...")
+    while True:
+        try:
+            bot.polling(none_stop=True, timeout=60)
+        except Exception as e:
+            print(f"Polling error: {e}")
+            time.sleep(5)
