@@ -395,12 +395,21 @@ def process_api_request(message, query_type, apis):
         threading.Thread(target=delete_message_later, args=(message.chat.id, sent_msg.message_id, 60)).start()
         bot.delete_message(message.chat.id, msg.message_id)
         
-        # Search Detected Alert (Sirf dusron ke liye)
-        if user_id != YOUR_CHAT_ID:
-            try:
-                log_text = f"<pre>🚨 NEW SEARCH (SUCCESS) 🚨\n{LINE}\n👤 NAME : {message.from_user.first_name}\n🆔 ID   : {user_id}\n🔍 QUERY: {query}\n{LINE}</pre>"
-                bot.send_message(YOUR_CHAT_ID, log_text, parse_mode='HTML')
-            except: pass
+            # Search Detected Alert (SUCCESS)
+    if user_id != YOUR_CHAT_ID:
+        try:
+            log_text = f"<pre>🚨 NEW SEARCH (SUCCESS) 🚨\n{LINE}\n👤 NAME : {message.from_user.first_name}\n🆔 ID   : {user_id}\n🔍 QUERY: {query}\n{LINE}</pre>"
+            bot.send_message(YOUR_CHAT_ID, log_text, parse_mode='HTML')
+        except: pass
+else:
+    bot.edit_message_text(text=f"<pre>🔴 DATA NOT FOUND\n{LINE}\nTARGET : {query}\nSTATUS : NO RECORDS.\n\n✅ No credits deducted.</pre>", chat_id=message.chat.id, message_id=msg.message_id, parse_mode='HTML', reply_markup=result_menu())
+    
+    # Search Detected Alert (FAILED)
+    if user_id != YOUR_CHAT_ID:
+        try:
+            log_text = f"<pre>🚨 NEW SEARCH (FAILED) 🚨\n{LINE}\n👤 NAME : {message.from_user.first_name}\n🆔 ID   : {user_id}\n🔍 QUERY: {query}\n{LINE}</pre>"
+            bot.send_message(YOUR_CHAT_ID, log_text, parse_mode='HTML')
+        except: pass
     else:
         bot.edit_message_text(text=f"<pre>🔴 DATA NOT FOUND\n{LINE}\nTARGET : {query}\nSTATUS : NO RECORDS.\n\n✅ No credits deducted.</pre>", chat_id=message.chat.id, message_id=msg.message_id, parse_mode='HTML', reply_markup=result_menu())
 
