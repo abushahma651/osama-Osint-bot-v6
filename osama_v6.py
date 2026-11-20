@@ -289,14 +289,13 @@ def process_redeem(msg):
     else: bot.reply_to(msg, "<pre>❌ Invalid or Expired Code.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
 
 # =====================================================================
-# 🔍 INSTANT TRIGGER FIX (No more Invalid/Slow Button)
+# 🔍 INSTANT TRIGGER FIX
 # =====================================================================
 @bot.message_handler(func=lambda message: message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_FAMILY, BTN_GST, BTN_VOTER])
 def prompt_search(message):
     if not is_authorized(message.from_user.id): return send_access_denied(message)
     user_id = str(message.from_user.id)
     
-    # Purane atke hue process ko clear karein (Slow/Invalid fix)
     bot.clear_step_handler_by_chat_id(message.chat.id)
 
     if message.text == BTN_NUM:
@@ -325,7 +324,7 @@ def prompt_search(message):
         bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_request, "VOTER", VOTER_APIS)
 
 # =====================================================================
-# 🔍 CORE API SEARCH LOGIC (Timeout 60s & All APIs Trigger)
+# 🔍 CORE API SEARCH LOGIC
 # =====================================================================
 def process_api_request(message, query_type, apis):
     user_id = str(message.from_user.id)
@@ -333,7 +332,6 @@ def process_api_request(message, query_type, apis):
 
     query = message.text.strip()
     
-    # Agar user ne galti se koi menu button dabaya hai search ki jagah
     if query.startswith('/') or query in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_FAMILY, BTN_GST, BTN_VOTER, "📖 How to Use", "🛒 Buy Credits", "🎁 Daily Claim", "📊 My Credits", "🎟️ Redeem Code", "👑 ADMIN PANEL"]:
         bot.clear_step_handler(message)
         return
@@ -357,7 +355,6 @@ def process_api_request(message, query_type, apis):
     for api in apis:
         try:
             url = api["url"].format(query)
-            # TIMEOUT 60 SECONDS
             res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=60)
             
             if res.status_code == 200:
@@ -395,27 +392,24 @@ def process_api_request(message, query_type, apis):
         threading.Thread(target=delete_message_later, args=(message.chat.id, sent_msg.message_id, 60)).start()
         bot.delete_message(message.chat.id, msg.message_id)
         
-            # Search Detected Alert (SUCCESS)
-    if user_id != YOUR_CHAT_ID:
-        try:
-            log_text = f"<pre>🚨 NEW SEARCH (SUCCESS) 🚨\n{LINE}\n👤 NAME : {message.from_user.first_name}\n🆔 ID   : {user_id}\n🔍 QUERY: {query}\n{LINE}</pre>"
-            bot.send_message(YOUR_CHAT_ID, log_text, parse_mode='HTML')
-        except: pass
-else:
-    bot.edit_message_text(text=f"<pre>🔴 DATA NOT FOUND\n{LINE}\nTARGET : {query}\nSTATUS : NO RECORDS.\n\n✅ No credits deducted.</pre>", chat_id=message.chat.id, message_id=msg.message_id, parse_mode='HTML', reply_markup=result_menu())
-    
-    # Search Detected Alert (FAILED)
-    if user_id != YOUR_CHAT_ID:
-        try:
-            log_text = f"<pre>🚨 NEW SEARCH (FAILED) 🚨\n{LINE}\n👤 NAME : {message.from_user.first_name}\n🆔 ID   : {user_id}\n🔍 QUERY: {query}\n{LINE}</pre>"
-            bot.send_message(YOUR_CHAT_ID, log_text, parse_mode='HTML')
-        except: pass
+        # SUCCESS ALERT
+        if user_id != YOUR_CHAT_ID:
+            try:
+                log_text = f"<pre>🚨 NEW SEARCH (SUCCESS) 🚨\n{LINE}\n👤 NAME : {message.from_user.first_name}\n🆔 ID   : {user_id}\n🔍 QUERY: {query}\n{LINE}</pre>"
+                bot.send_message(YOUR_CHAT_ID, log_text, parse_mode='HTML')
+            except: pass
     else:
         bot.edit_message_text(text=f"<pre>🔴 DATA NOT FOUND\n{LINE}\nTARGET : {query}\nSTATUS : NO RECORDS.\n\n✅ No credits deducted.</pre>", chat_id=message.chat.id, message_id=msg.message_id, parse_mode='HTML', reply_markup=result_menu())
+        
+        # FAILED ALERT (Fixed spacing and indentation)
+        if user_id != YOUR_CHAT_ID:
+            try:
+                log_text = f"<pre>🚨 NEW SEARCH (FAILED) 🚨\n{LINE}\n👤 NAME : {message.from_user.first_name}\n🆔 ID   : {user_id}\n🔍 QUERY: {query}\n{LINE}</pre>"
+                bot.send_message(YOUR_CHAT_ID, log_text, parse_mode='HTML')
+            except: pass
 
 @bot.message_handler(func=lambda message: True)
 def invalid_input(message):
-    # Button Handler Bug Fix
     if message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_FAMILY, BTN_GST, BTN_VOTER]:
         prompt_search(message)
     elif message.text in ["📖 How to Use", "🛒 Buy Credits", "🎁 Daily Claim", "📊 My Credits", "🎟️ Redeem Code"]:
