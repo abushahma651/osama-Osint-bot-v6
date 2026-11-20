@@ -26,35 +26,36 @@ ALLOWED_USERS = [
 ]
 
 # --- APIS ---
+# MOBILE APIS (Ab isme SocialXHub wali bhi add hai)
 MOBILE_APIS = [
-    {"name": "DARK_NET (Mobile)", "url": "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"}
+    {"name": "DARK_NET (Mobile)", "url": "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"},
+    {"name": "SOCIALXHUB (Mobile)", "url": "https://socialxhub.online/adhar?q={}&page=1&token=ak_0fd6d3eeccff475cb5c499c5fe17148a"}
 ]
 
+# AADHAAR APIS
 AADHAAR_APIS = [
     {"name": "DARK_NET (Aadhaar)", "url": "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"},
     {"name": "SOCIALXHUB (Aadhaar)", "url": "https://socialxhub.online/adhar?q={}&page=1&token=ak_0fd6d3eeccff475cb5c499c5fe17148a"}
 ]
 
+# VEHICLE APIS
 VEHICLE_INFO_APIS = [
     {"name": "SOCIALXHUB (Vehicle)", "url": "https://socialxhub.online/vhi?q={}&page=1&token=ak_0dc6a0959e094e838360bc611dfcab16"}
 ]
-
 VEHICLE_CHALLAN_APIS = [
     {"name": "ALLPRINTHUB (Challan)", "url": "https://api.allprinthub.in/api?=vehicle_all_in_1&key=free&q={}"}
 ]
 
+# RATION, FAMILY, GST, VOTER APIS
 RATION_APIS = [
     {"name": "SOCIALXHUB (Ration)", "url": "https://socialxhub.online/ration?q={}&page=1&token=ak_16649033d4924a4eba978c9b7fd8c109"}
 ]
-
 FAMILY_APIS = [
     {"name": "ALLPRINTHUB (Family)", "url": "https://api.allprinthub.in/api?=adhaar_to_family_680&key=f4328e3c255b18&q={}"}
 ]
-
 GST_APIS = [
     {"name": "SOCIALXHUB (GST)", "url": "https://socialxhub.online/gst?q={}&page=1&token=ak_a7a211dcad934e0693a3cdece31a8f1a"}
 ]
-
 VOTER_APIS = [
     {"name": "ALLPRINTHUB (Voter)", "url": "https://api.allprinthub.in/api?=voter_info_x&key=153f4492d&ronak_api={}"}
 ]
@@ -401,7 +402,7 @@ def process_api_request(message, query_type, apis):
     else:
         bot.edit_message_text(text=f"<pre>🔴 DATA NOT FOUND\n{LINE}\nTARGET : {query}\nSTATUS : NO RECORDS.\n\n✅ No credits deducted.</pre>", chat_id=message.chat.id, message_id=msg.message_id, parse_mode='HTML', reply_markup=result_menu())
         
-        # FAILED ALERT (Fixed spacing and indentation)
+        # FAILED ALERT
         if user_id != YOUR_CHAT_ID:
             try:
                 log_text = f"<pre>🚨 NEW SEARCH (FAILED) 🚨\n{LINE}\n👤 NAME : {message.from_user.first_name}\n🆔 ID   : {user_id}\n🔍 QUERY: {query}\n{LINE}</pre>"
@@ -437,4 +438,3 @@ if __name__ == "__main__":
     while True:
         try: bot.polling(none_stop=True, timeout=60)
         except Exception as e: print(f"Poll error: {e}"); time.sleep(5)
-    
