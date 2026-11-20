@@ -25,27 +25,38 @@ ALLOWED_USERS = [
     "5704555109", "901112667", "8659201578"
 ]
 
+# --- APIS ---
 MOBILE_APIS = [
-    {"name": "API_1", "url": "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"},
-    {"name": "API_2", "url": "https://api.allprinthub.in/api?=num_info_767&key=7day&%40Ronak_api={}"}
+    {"name": "DARK_NET (Mobile)", "url": "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"}
 ]
+
 AADHAAR_APIS = [
-    {"name": "API_1", "url": "https://socialxhub.online/adhar?q={}&page=1&token=ak_0fd6d3eeccff475cb5c499c5fe17148a"}
+    {"name": "DARK_NET (Aadhaar)", "url": "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"},
+    {"name": "SOCIALXHUB (Aadhaar)", "url": "https://socialxhub.online/adhar?q={}&page=1&token=ak_0fd6d3eeccff475cb5c499c5fe17148a"}
 ]
+
 VEHICLE_INFO_APIS = [
-    {"name": "API_1", "url": "https://socialxhub.online/vhi?q={}&page=1&token=ak_0dc6a0959e094e838360bc611dfcab16"}
+    {"name": "SOCIALXHUB (Vehicle)", "url": "https://socialxhub.online/vhi?q={}&page=1&token=ak_0dc6a0959e094e838360bc611dfcab16"}
 ]
+
 VEHICLE_CHALLAN_APIS = [
-    {"name": "API_1", "url": "https://api.allprinthub.in/api?=vehicle_all_in_1&key=free&q={}"}
+    {"name": "ALLPRINTHUB (Challan)", "url": "https://api.allprinthub.in/api?=vehicle_all_in_1&key=free&q={}"}
 ]
+
 RATION_APIS = [
-    {"name": "API_1", "url": "https://socialxhub.online/ration?q={}&page=1&token=ak_16649033d4924a4eba978c9b7fd8c109"}
+    {"name": "SOCIALXHUB (Ration)", "url": "https://socialxhub.online/ration?q={}&page=1&token=ak_16649033d4924a4eba978c9b7fd8c109"}
 ]
+
+FAMILY_APIS = [
+    {"name": "ALLPRINTHUB (Family)", "url": "https://api.allprinthub.in/api?=adhaar_to_family_680&key=f4328e3c255b18&q={}"}
+]
+
 GST_APIS = [
-    {"name": "API_1", "url": "https://socialxhub.online/gst?q={}&page=1&token=ak_a7a211dcad934e0693a3cdece31a8f1a"}
+    {"name": "SOCIALXHUB (GST)", "url": "https://socialxhub.online/gst?q={}&page=1&token=ak_a7a211dcad934e0693a3cdece31a8f1a"}
 ]
+
 VOTER_APIS = [
-    {"name": "API_1", "url": "https://api.allprinthub.in/api?=voter_info_x&key=153f4492d&ronak_api={}"}
+    {"name": "ALLPRINTHUB (Voter)", "url": "https://api.allprinthub.in/api?=voter_info_x&key=153f4492d&ronak_api={}"}
 ]
 
 BTN_NUM = "✅ [LIVE] 📱 NUM LOOKUP"
@@ -53,6 +64,7 @@ BTN_AADHAAR = "✅ [LIVE] 🆔 AADHAAR INFO"
 BTN_VEHICLE_INFO = "✅ [LIVE] 🚗 VEHICLE INFO"
 BTN_VEHICLE_CHALLAN = "✅ [LIVE] 🚨 VEHICLE CHALLAN"
 BTN_RATION = "✅ [LIVE] 👥 RATION FAMILY"
+BTN_FAMILY = "✅ [LIVE] 👨‍👩‍👧 AADHAAR FAMILY"
 BTN_GST = "✅ [LIVE] 🏢 GST INFO"
 BTN_VOTER = "✅ [LIVE] 🗳️ VOTER INFO"
 LINE = "✦⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯✦"
@@ -72,19 +84,21 @@ def main_menu(user_id):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.row(BTN_NUM)
     markup.row(BTN_AADHAAR)
-    markup.row(BTN_VEHICLE_INFO)
-    markup.row(BTN_VEHICLE_CHALLAN)
-    markup.row(BTN_RATION, BTN_GST)
-    markup.row(BTN_VOTER, "🎟️ Redeem Code")
-    markup.row("🔹 COMING SOON (SOON) 🔹")
-    markup.row("⏳ [SOON] 👨‍👩‍👧 AADHAAR FAMILY")
+    markup.row(BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN)
+    markup.row(BTN_RATION, BTN_FAMILY)
+    markup.row(BTN_GST, BTN_VOTER)
+    markup.row("🎟️ Redeem Code", "📖 How to Use")
+    
+    markup.row("🔹 COMING SOON 🔹")
     markup.row("⏳ [SOON] 🧠 TG ID → Num", "⏳ [SOON] 👤 TG User → Num")
     markup.row("⏳ [SOON] 📧 Email → Num", "⏳ [SOON] 🌐 Web Scraper")
     markup.row("⏳ [SOON] 🏡 Vehicle Address", "⏳ [SOON] 📄 RC → PDF")
     markup.row("⏳ [SOON] 📸 Instagram Info", "⏳ [SOON] 💳 PAN Info")
     markup.row("⏳ [SOON] ⚪ LPG Info", "⏳ [SOON] 🎮 BGMI Info")
+    
     markup.row("📊 My Credits", "🛒 Buy Credits")
-    markup.row("🎁 Daily Claim", "📖 How to Use")
+    markup.row("🎁 Daily Claim")
+    
     if str(user_id) == YOUR_CHAT_ID: markup.row("👑 ADMIN PANEL")
     return markup
 
@@ -224,7 +238,6 @@ def send_welcome(message):
     text += f"{LINE}\n🚧 NOTE: ALL APIs ARE ACTIVE.\n{LINE}\n🔒 VIP Access required for searching.\n👑 OWNER — @OSMIUM_9\n{LINE}</pre>"
     bot.send_photo(message.chat.id, image_url, caption=text, parse_mode='HTML', reply_markup=main_menu(user_id))
 
-
 @bot.message_handler(func=lambda message: message.text in ["📖 How to Use", "🛒 Buy Credits", "🎁 Daily Claim", "📊 My Credits", "🎟️ Redeem Code"])
 def static_menus(message):
     if not is_authorized(message.from_user.id): return send_access_denied(message)
@@ -275,11 +288,17 @@ def process_redeem(msg):
         bot.reply_to(msg, f"<pre>🎉 CODE REDEEMED\n{LINE}\n+{amount} CREDITS\nBALANCE : {USER_DATA[user_id]['credits']}\n{LINE}</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
     else: bot.reply_to(msg, "<pre>❌ Invalid or Expired Code.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
 
-@bot.message_handler(func=lambda message: message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_GST, BTN_VOTER])
+# =====================================================================
+# 🔍 INSTANT TRIGGER FIX (No more Invalid/Slow Button)
+# =====================================================================
+@bot.message_handler(func=lambda message: message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_FAMILY, BTN_GST, BTN_VOTER])
 def prompt_search(message):
     if not is_authorized(message.from_user.id): return send_access_denied(message)
     user_id = str(message.from_user.id)
     
+    # Purane atke hue process ko clear karein (Slow/Invalid fix)
+    bot.clear_step_handler_by_chat_id(message.chat.id)
+
     if message.text == BTN_NUM:
         text = f"<pre>📱 MOBILE SEARCH\n{LINE}\nType a 10-digit Mobile Number:</pre>"
         bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_request, "MOBILE", MOBILE_APIS)
@@ -295,6 +314,9 @@ def prompt_search(message):
     elif message.text == BTN_RATION:
         text = f"<pre>👥 RATION SEARCH\n{LINE}\nType Ration Card Number:</pre>"
         bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_request, "RATION", RATION_APIS)
+    elif message.text == BTN_FAMILY:
+        text = f"<pre>👨‍👩‍👧 FAMILY SEARCH\n{LINE}\nType Aadhaar Number:</pre>"
+        bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_request, "FAMILY", FAMILY_APIS)
     elif message.text == BTN_GST:
         text = f"<pre>🏢 GST SEARCH\n{LINE}\nType GST Number:</pre>"
         bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_request, "GST", GST_APIS)
@@ -302,13 +324,17 @@ def prompt_search(message):
         text = f"<pre>🗳️ VOTER SEARCH\n{LINE}\nType Voter ID Number:</pre>"
         bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_request, "VOTER", VOTER_APIS)
 
+# =====================================================================
+# 🔍 CORE API SEARCH LOGIC (Timeout 60s & All APIs Trigger)
+# =====================================================================
 def process_api_request(message, query_type, apis):
     user_id = str(message.from_user.id)
     if not is_authorized(user_id): return send_access_denied(message)
 
     query = message.text.strip()
     
-    if query.startswith('/') or query in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_GST, BTN_VOTER, "📖 How to Use", "🛒 Buy Credits", "🎁 Daily Claim", "📊 My Credits", "🎟️ Redeem Code", "👑 ADMIN PANEL"]:
+    # Agar user ne galti se koi menu button dabaya hai search ki jagah
+    if query.startswith('/') or query in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_FAMILY, BTN_GST, BTN_VOTER, "📖 How to Use", "🛒 Buy Credits", "🎁 Daily Claim", "📊 My Credits", "🎟️ Redeem Code", "👑 ADMIN PANEL"]:
         bot.clear_step_handler(message)
         return
         
@@ -331,7 +357,8 @@ def process_api_request(message, query_type, apis):
     for api in apis:
         try:
             url = api["url"].format(query)
-            res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
+            # TIMEOUT 60 SECONDS
+            res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=60)
             
             if res.status_code == 200:
                 data = res.json()
@@ -368,7 +395,7 @@ def process_api_request(message, query_type, apis):
         threading.Thread(target=delete_message_later, args=(message.chat.id, sent_msg.message_id, 60)).start()
         bot.delete_message(message.chat.id, msg.message_id)
         
-        # Search Detected (Sirf dusron ke liye)
+        # Search Detected Alert (Sirf dusron ke liye)
         if user_id != YOUR_CHAT_ID:
             try:
                 log_text = f"<pre>🚨 NEW SEARCH (SUCCESS) 🚨\n{LINE}\n👤 NAME : {message.from_user.first_name}\n🆔 ID   : {user_id}\n🔍 QUERY: {query}\n{LINE}</pre>"
@@ -379,7 +406,8 @@ def process_api_request(message, query_type, apis):
 
 @bot.message_handler(func=lambda message: True)
 def invalid_input(message):
-    if message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_GST, BTN_VOTER]:
+    # Button Handler Bug Fix
+    if message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_FAMILY, BTN_GST, BTN_VOTER]:
         prompt_search(message)
     elif message.text in ["📖 How to Use", "🛒 Buy Credits", "🎁 Daily Claim", "📊 My Credits", "🎟️ Redeem Code"]:
         static_menus(message)
@@ -389,6 +417,7 @@ def invalid_input(message):
         if not is_authorized(message.from_user.id): return send_access_denied(message)
         bot.reply_to(message, "<pre>❌ ERROR: Unrecognized Command.\nUse the menu below.</pre>", parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
 
+# --- WEB SERVER ---
 app = Flask(__name__)
 @app.route('/')
 def home(): return "NERD OSINT Bot Running!"
