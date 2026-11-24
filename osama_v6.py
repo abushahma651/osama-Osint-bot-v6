@@ -19,7 +19,6 @@ SEARCH_HISTORY = {}
 REDEEM_CODES = {} 
 PROTECTED_NUMBERS = ["9621303160", "7991536322", "8604302624", "6204473620"]
 
-# NAYA: Maintenance Mode aur API Status Variables
 BOT_STATUS = {"maintenance": False}
 API_STATUS = {
     "DARK_NET": True, "SOCIALXHUB": True, "ALLPRINTHUB": True
@@ -32,29 +31,24 @@ ALLOWED_USERS = [
 ]
 
 # --- APIS ---
-# MOBILE APIS
 MOBILE_APIS = [
     {"name": "DARK_NET (Mobile)", "url": "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"},
     {"name": "SOCIALXHUB (Mobile)", "url": "https://socialxhub.online/adhar?q={}&page=1&token=ak_0fd6d3eeccff475cb5c499c5fe17148a"}
 ]
 
-# AADHAAR APIS
 AADHAAR_APIS = [
     {"name": "DARK_NET (Aadhaar)", "url": "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"},
     {"name": "SOCIALXHUB (Aadhaar)", "url": "https://socialxhub.online/adhar?q={}&page=1&token=ak_0fd6d3eeccff475cb5c499c5fe17148a"}
 ]
 
-# VEHICLE APIS
 VEHICLE_INFO_APIS = [
     {"name": "SOCIALXHUB (Vehicle)", "url": "https://socialxhub.online/vhi?q={}&page=1&token=ak_0dc6a0959e094e838360bc611dfcab16"}
 ]
 
-# CHALLAN API
 VEHICLE_CHALLAN_APIS = [
     {"name": "ALLPRINTHUB (Challan)", "url": "https://api.allprinthub.in/api?=challan&key=Ronak_api&v={}"}
 ]
 
-# RATION, FAMILY, GST, VOTER APIS
 RATION_APIS = [
     {"name": "SOCIALXHUB (Ration)", "url": "https://socialxhub.online/ration?q={}&page=1&token=ak_16649033d4924a4eba978c9b7fd8c109"}
 ]
@@ -152,7 +146,7 @@ def delete_message_later(chat_id, message_id, delay=60):
     try: bot.delete_message(chat_id, message_id)
     except: pass
 
-    @bot.message_handler(func=lambda message: message.text == "👑 ADMIN PANEL" and str(message.from_user.id) == YOUR_CHAT_ID)
+@bot.message_handler(func=lambda message: message.text == "👑 ADMIN PANEL" and str(message.from_user.id) == YOUR_CHAT_ID)
 def show_admin_panel(message):
     bot.reply_to(message, f"<pre>👑 OWNER CONTROL PANEL\n{LINE}\nSelect an action below:</pre>", parse_mode='HTML', reply_markup=admin_panel_menu())
 
@@ -335,7 +329,9 @@ def process_redeem(msg):
         bot.reply_to(msg, f"<pre>🎉 CODE REDEEMED\n{LINE}\n+{amount} CREDITS\nBALANCE : {USER_DATA[user_id]['credits']}\n{LINE}</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
     else: bot.reply_to(msg, "<pre>❌ Invalid or Expired Code.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
 
-    @bot.message_handler(func=lambda message: message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_FAMILY, BTN_GST, BTN_VOTER])
+
+
+@bot.message_handler(func=lambda message: message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_FAMILY, BTN_GST, BTN_VOTER])
 def prompt_search(message):
     if not is_authorized(message.from_user.id): return send_access_denied(message)
     
