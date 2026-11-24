@@ -43,7 +43,7 @@ VEHICLE_INFO_APIS = [
     {"name": "SOCIALXHUB (Vehicle)", "url": "https://socialxhub.online/vhi?q={}&page=1&token=ak_0dc6a0959e094e838360bc611dfcab16"}
 ]
 VEHICLE_CHALLAN_APIS = [
-    {"name": "ALLPRINTHUB (Challan)", "url": "https://api.allprinthub.in/api?=vechallan&key=Ronak_api&v={}"}
+    {"name": "ALLPRINTHUB (Challan)", "url": "https://api.allprinthub.in/api?=challan&key=Ronak_api&v={}"}
 ]
 
 # RATION, FAMILY, GST, VOTER APIS
