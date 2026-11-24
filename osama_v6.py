@@ -26,7 +26,7 @@ ALLOWED_USERS = [
 ]
 
 # --- APIS ---
-# MOBILE APIS (Ab isme SocialXHub wali bhi add hai)
+# MOBILE APIS
 MOBILE_APIS = [
     {"name": "DARK_NET (Mobile)", "url": "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"},
     {"name": "SOCIALXHUB (Mobile)", "url": "https://socialxhub.online/adhar?q={}&page=1&token=ak_0fd6d3eeccff475cb5c499c5fe17148a"}
@@ -42,6 +42,8 @@ AADHAAR_APIS = [
 VEHICLE_INFO_APIS = [
     {"name": "SOCIALXHUB (Vehicle)", "url": "https://socialxhub.online/vhi?q={}&page=1&token=ak_0dc6a0959e094e838360bc611dfcab16"}
 ]
+
+# CHALLAN API UPDATED HERE
 VEHICLE_CHALLAN_APIS = [
     {"name": "ALLPRINTHUB (Challan)", "url": "https://api.allprinthub.in/api?=challan&key=Ronak_api&v={}"}
 ]
@@ -79,7 +81,7 @@ def get_user_credits(user_id):
     return USER_DATA[user_id]["credits"]
 
 def generate_code(length=8):
-    return ''.join(random.choice(string.ascii_uppercase + string.digits) for i in range(length))
+    return ''.join(random.choice(string.ascii_uppercase + string.DIGITS) for i in range(length))
 
 def main_menu(user_id):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -289,9 +291,6 @@ def process_redeem(msg):
         bot.reply_to(msg, f"<pre>🎉 CODE REDEEMED\n{LINE}\n+{amount} CREDITS\nBALANCE : {USER_DATA[user_id]['credits']}\n{LINE}</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
     else: bot.reply_to(msg, "<pre>❌ Invalid or Expired Code.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
 
-# =====================================================================
-# 🔍 INSTANT TRIGGER FIX
-# =====================================================================
 @bot.message_handler(func=lambda message: message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_FAMILY, BTN_GST, BTN_VOTER])
 def prompt_search(message):
     if not is_authorized(message.from_user.id): return send_access_denied(message)
@@ -325,7 +324,7 @@ def prompt_search(message):
         bot.register_next_step_handler(bot.reply_to(message, text, parse_mode='HTML', reply_markup=main_menu(user_id)), process_api_request, "VOTER", VOTER_APIS)
 
 # =====================================================================
-# 🔍 CORE API SEARCH LOGIC
+# 🔍 CORE API SEARCH LOGIC (UPDATED FOR CHALLAN TEXT RESPONSE)
 # =====================================================================
 def process_api_request(message, query_type, apis):
     user_id = str(message.from_user.id)
@@ -359,8 +358,19 @@ def process_api_request(message, query_type, apis):
             res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=60)
             
             if res.status_code == 200:
-                data = res.json()
-                if query_type == "VEHICLE_INFO" and "vehicle_data" in data:
+                # NAYA FIX: API JSON bhej rahi hai ya Text, dono handle karega
+                try:
+                    data = res.json()
+                except Exception:
+                    data = res.text
+                
+                if query_type == "VEHICLE_CHALLAN":
+                    # Challan ka data direct text hota hai, usko as it is append kar rahe hain
+                    if len(str(data)) > 10:
+                        all_api_data.append(f"--- {api['name']} ---\n{str(data)}")
+                        found_any = True
+                        
+                elif query_type == "VEHICLE_INFO" and isinstance(data, dict) and "vehicle_data" in data:
                     v_data = data["vehicle_data"]
                     formatted = f"--- {api['name']} ---\n"
                     formatted += f"Name: {v_data.get('owner_name', 'N/A')}\n"
@@ -370,6 +380,7 @@ def process_api_request(message, query_type, apis):
                     all_api_data.append(formatted)
                     found_any = True
                 else:
+                    # Purana JSON wala logic baaki APIs ke liye
                     json_str = json.dumps(data, indent=2)
                     clean_lines = []
                     for line in json_str.split('\n'):
@@ -389,6 +400,10 @@ def process_api_request(message, query_type, apis):
         report += "\n\n".join(all_api_data)
         report += f"\n{LINE}\nBy : @OSMIUM_9\nNERD PRIVATE OSINT\n{LINE}\n⚠️ AUTO-DELETE IN 60s.\n</pre>"
         
+        # Telegram message limit fix: Agar report bohot lambi hai toh cut kar dega
+        if len(report) > 4000:
+            report = report[:3900] + "\n... [DATA TRUNCATED] ...\n</pre>"
+
         sent_msg = bot.send_message(message.chat.id, report, parse_mode='HTML', reply_markup=result_menu())
         threading.Thread(target=delete_message_later, args=(message.chat.id, sent_msg.message_id, 60)).start()
         bot.delete_message(message.chat.id, msg.message_id)
