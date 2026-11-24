@@ -32,24 +32,29 @@ ALLOWED_USERS = [
 ]
 
 # --- APIS ---
+# MOBILE APIS
 MOBILE_APIS = [
     {"name": "DARK_NET (Mobile)", "url": "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"},
     {"name": "SOCIALXHUB (Mobile)", "url": "https://socialxhub.online/adhar?q={}&page=1&token=ak_0fd6d3eeccff475cb5c499c5fe17148a"}
 ]
 
+# AADHAAR APIS
 AADHAAR_APIS = [
     {"name": "DARK_NET (Aadhaar)", "url": "https://api.darknetwork.site/index.php?api=hi_tek&key=key_DarkApiX444&search={}"},
     {"name": "SOCIALXHUB (Aadhaar)", "url": "https://socialxhub.online/adhar?q={}&page=1&token=ak_0fd6d3eeccff475cb5c499c5fe17148a"}
 ]
 
+# VEHICLE APIS
 VEHICLE_INFO_APIS = [
     {"name": "SOCIALXHUB (Vehicle)", "url": "https://socialxhub.online/vhi?q={}&page=1&token=ak_0dc6a0959e094e838360bc611dfcab16"}
 ]
 
+# CHALLAN API
 VEHICLE_CHALLAN_APIS = [
     {"name": "ALLPRINTHUB (Challan)", "url": "https://api.allprinthub.in/api?=challan&key=Ronak_api&v={}"}
 ]
 
+# RATION, FAMILY, GST, VOTER APIS
 RATION_APIS = [
     {"name": "SOCIALXHUB (Ration)", "url": "https://socialxhub.online/ration?q={}&page=1&token=ak_16649033d4924a4eba978c9b7fd8c109"}
 ]
@@ -108,8 +113,6 @@ def main_menu(user_id):
 
 def admin_panel_menu():
     markup = types.InlineKeyboardMarkup(row_width=2)
-    
-    # Maintenance Button Status
     main_status = "🔴 OFF" if BOT_STATUS["maintenance"] else "🟢 ON"
     main_text = f"🛠️ Maintenance: {main_status}"
 
@@ -149,7 +152,7 @@ def delete_message_later(chat_id, message_id, delay=60):
     try: bot.delete_message(chat_id, message_id)
     except: pass
 
-@bot.message_handler(func=lambda message: message.text == "👑 ADMIN PANEL" and str(message.from_user.id) == YOUR_CHAT_ID)
+    @bot.message_handler(func=lambda message: message.text == "👑 ADMIN PANEL" and str(message.from_user.id) == YOUR_CHAT_ID)
 def show_admin_panel(message):
     bot.reply_to(message, f"<pre>👑 OWNER CONTROL PANEL\n{LINE}\nSelect an action below:</pre>", parse_mode='HTML', reply_markup=admin_panel_menu())
 
@@ -160,7 +163,6 @@ def admin_callbacks(call):
     action = call.data.split("_")[1]
     bot.clear_step_handler_by_chat_id(call.message.chat.id)
     
-    # NAYA: Maintenance aur API Settings ka logic
     if call.data == "adm_toggle_main":
         BOT_STATUS["maintenance"] = not BOT_STATUS["maintenance"]
         status = "ON (Users blocked)" if BOT_STATUS["maintenance"] else "OFF (Users allowed)"
@@ -283,7 +285,6 @@ def send_welcome(message):
 def static_menus(message):
     if not is_authorized(message.from_user.id): return send_access_denied(message)
     
-    # NAYA: Maintenance Check
     if BOT_STATUS["maintenance"] and str(message.from_user.id) != YOUR_CHAT_ID:
         return bot.reply_to(message, f"<pre>{LINE}\n🚧 BOT UNDER MAINTENANCE 🚧\n{LINE}\nOur systems are currently being updated.\nPlease try again later.\n{LINE}</pre>", parse_mode='HTML')
 
@@ -334,16 +335,14 @@ def process_redeem(msg):
         bot.reply_to(msg, f"<pre>🎉 CODE REDEEMED\n{LINE}\n+{amount} CREDITS\nBALANCE : {USER_DATA[user_id]['credits']}\n{LINE}</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
     else: bot.reply_to(msg, "<pre>❌ Invalid or Expired Code.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
 
-@bot.message_handler(func=lambda message: message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_FAMILY, BTN_GST, BTN_VOTER])
+    @bot.message_handler(func=lambda message: message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_FAMILY, BTN_GST, BTN_VOTER])
 def prompt_search(message):
     if not is_authorized(message.from_user.id): return send_access_denied(message)
     
-    # NAYA: Maintenance Check
     if BOT_STATUS["maintenance"] and str(message.from_user.id) != YOUR_CHAT_ID:
         return bot.reply_to(message, f"<pre>{LINE}\n🚧 BOT UNDER MAINTENANCE 🚧\n{LINE}\nOur systems are currently being updated.\nPlease try again later.\n{LINE}</pre>", parse_mode='HTML')
 
     user_id = str(message.from_user.id)
-    
     bot.clear_step_handler_by_chat_id(message.chat.id)
 
     if message.text == BTN_NUM:
@@ -375,7 +374,6 @@ def process_api_request(message, query_type, apis):
     user_id = str(message.from_user.id)
     if not is_authorized(user_id): return send_access_denied(message)
 
-    # NAYA: Maintenance Check (Search karne se pehle bhi)
     if BOT_STATUS["maintenance"] and user_id != YOUR_CHAT_ID:
         return bot.reply_to(message, f"<pre>{LINE}\n🚧 BOT UNDER MAINTENANCE 🚧\n{LINE}\nPlease try again later.\n{LINE}</pre>", parse_mode='HTML')
 
@@ -402,7 +400,6 @@ def process_api_request(message, query_type, apis):
     all_api_data = []
 
     for api in apis:
-        # NAYA: Check karo agar API ko Admin ne OFF kiya hai toh skip karo
         api_provider = api['name'].split(" ")[0]
         if not API_STATUS.get(api_provider, True):
             continue
@@ -468,4 +465,36 @@ def process_api_request(message, query_type, apis):
         
         if user_id != YOUR_CHAT_ID:
             try:
-                log_text = f"<pre>🚨 NEW SEARCH (FAILED) 🚨\n{LINE}\n👤 NAME : {message.from_user.first_name}\n🆔 ID   : {user_id}\n🔍 QUERY: {query}\n{LINE}</
+                log_text = f"<pre>🚨 NEW SEARCH (FAILED) 🚨\n{LINE}\n👤 NAME : {message.from_user.first_name}\n🆔 ID   : {user_id}\n🔍 QUERY: {query}\n{LINE}</pre>"
+                bot.send_message(YOUR_CHAT_ID, log_text, parse_mode='HTML')
+            except: pass
+
+@bot.message_handler(func=lambda message: True)
+def invalid_input(message):
+    if message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_FAMILY, BTN_GST, BTN_VOTER]:
+        prompt_search(message)
+    elif message.text in ["📖 How to Use", "🛒 Buy Credits", "🎁 Daily Claim", "📊 My Credits", "🎟️ Redeem Code"]:
+        static_menus(message)
+    elif message.text == "👑 ADMIN PANEL" and str(message.from_user.id) == YOUR_CHAT_ID:
+        show_admin_panel(message)
+    else:
+        if not is_authorized(message.from_user.id): return send_access_denied(message)
+        bot.reply_to(message, "<pre>❌ ERROR: Unrecognized Command.\nUse the menu below.</pre>", parse_mode='HTML', reply_markup=main_menu(message.from_user.id))
+
+# --- WEB SERVER ---
+app = Flask(__name__)
+@app.route('/')
+def home(): return "NERD OSINT Bot Running!"
+
+def run_web():
+    try: app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 8080)))
+    except Exception as e: print(f"Web error: {e}")
+
+if __name__ == "__main__":
+    print("Starting bot...")
+    threading.Thread(target=run_web, daemon=True).start()
+    try: bot.remove_webhook()
+    except: pass
+    while True:
+        try: bot.polling(none_stop=True, timeout=60)
+        except Exception as e: print(f"Poll error: {e}"); time.sleep(5)
