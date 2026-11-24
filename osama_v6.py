@@ -20,8 +20,17 @@ REDEEM_CODES = {}
 PROTECTED_NUMBERS = ["9621303160", "7991536322", "8604302624", "6204473620"]
 
 BOT_STATUS = {"maintenance": False}
+
+# NAYA: Ab individual buttons ka status track hoga
 API_STATUS = {
-    "DARK_NET": True, "SOCIALXHUB": True, "ALLPRINTHUB": True
+    "MOBILE": True, 
+    "AADHAAR": True, 
+    "VEHICLE_INFO": True, 
+    "VEHICLE_CHALLAN": True,
+    "RATION": True,
+    "FAMILY": True,
+    "GST": True,
+    "VOTER": True
 }
 
 ALLOWED_USERS = [
@@ -125,7 +134,7 @@ def admin_panel_menu():
     return markup
 
 def api_settings_menu():
-    markup = types.InlineKeyboardMarkup(row_width=1)
+    markup = types.InlineKeyboardMarkup(row_width=2)
     for api_name, status in API_STATUS.items():
         status_icon = "🟢 ON" if status else "🔴 OFF"
         markup.add(types.InlineKeyboardButton(f"{api_name} : {status_icon}", callback_data=f"api_toggle_{api_name}"))
@@ -146,6 +155,7 @@ def delete_message_later(chat_id, message_id, delay=60):
     try: bot.delete_message(chat_id, message_id)
     except: pass
 
+
 @bot.message_handler(func=lambda message: message.text == "👑 ADMIN PANEL" and str(message.from_user.id) == YOUR_CHAT_ID)
 def show_admin_panel(message):
     bot.reply_to(message, f"<pre>👑 OWNER CONTROL PANEL\n{LINE}\nSelect an action below:</pre>", parse_mode='HTML', reply_markup=admin_panel_menu())
@@ -164,7 +174,7 @@ def admin_callbacks(call):
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=admin_panel_menu())
         
     elif call.data == "adm_api_settings":
-        bot.edit_message_text("<pre>⚙️ API SETTINGS\nClick on any API to turn it ON or OFF.</pre>", chat_id=call.message.chat.id, message_id=call.message.message_id, parse_mode='HTML', reply_markup=api_settings_menu())
+        bot.edit_message_text("<pre>⚙️ FEATURE SETTINGS\nClick on any Feature to turn it ON or OFF.</pre>", chat_id=call.message.chat.id, message_id=call.message.message_id, parse_mode='HTML', reply_markup=api_settings_menu())
 
     elif call.data == "adm_back":
         bot.edit_message_text(f"<pre>👑 OWNER CONTROL PANEL\n{LINE}\nSelect an action below:</pre>", chat_id=call.message.chat.id, message_id=call.message.message_id, parse_mode='HTML', reply_markup=admin_panel_menu())
@@ -330,7 +340,6 @@ def process_redeem(msg):
     else: bot.reply_to(msg, "<pre>❌ Invalid or Expired Code.</pre>", parse_mode='HTML', reply_markup=main_menu(user_id))
 
 
-
 @bot.message_handler(func=lambda message: message.text in [BTN_NUM, BTN_AADHAAR, BTN_VEHICLE_INFO, BTN_VEHICLE_CHALLAN, BTN_RATION, BTN_FAMILY, BTN_GST, BTN_VOTER])
 def prompt_search(message):
     if not is_authorized(message.from_user.id): return send_access_denied(message)
@@ -396,9 +405,9 @@ def process_api_request(message, query_type, apis):
     all_api_data = []
 
     for api in apis:
-        api_provider = api['name'].split(" ")[0]
-        if not API_STATUS.get(api_provider, True):
-            continue
+        # NAYA FIX: Direct feature ko check karega ki wo ON hai ya OFF
+        if not API_STATUS.get(query_type, True):
+            break
 
         try:
             url = api["url"].format(query)
